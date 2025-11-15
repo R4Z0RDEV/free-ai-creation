@@ -90,9 +90,9 @@ export default function Home() {
                 variants={fadeIn}
                 className="headline-xl text-balance font-serif text-white drop-shadow-[0_12px_40px_rgba(0,0,0,0.85)]"
               >
-                Create any scene
+                Completetly free AI
                 <br />
-                you can imagine.
+                creation studio.
               </motion.h1>
 
             <motion.p

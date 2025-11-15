@@ -1,7 +1,7 @@
 // src/components/Layout/AppShell.tsx
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
@@ -13,6 +13,8 @@ type AdBannerProps = {
 };
 
 function AdBanner({ slot, className }: AdBannerProps) {
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -20,10 +22,15 @@ function AdBanner({ slot, className }: AdBannerProps) {
         (window as typeof window & { adsbygoogle?: unknown }).adsbygoogle || [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(window as any).adsbygoogle.push({});
+      setIsReady(true);
     } catch (error) {
       console.error('Failed to load AdSense slot:', error);
     }
   }, []);
+
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <ins
