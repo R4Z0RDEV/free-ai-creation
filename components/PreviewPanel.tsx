@@ -2,10 +2,12 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Play, Pause, Download, Link2, Video, PlayCircle } from 'lucide-react';
+import { Play, Pause, Download, Link2, Video, PlayCircle, Maximize2, X, Loader2 } from 'lucide-react';
 import { SimpleProgress } from './SimpleProgress';
 import { Clip } from '@/lib/types';
 import { cn } from '@/lib/utils';
+
+const DOWNLOAD_UNLOCK_KEY = 'fac_video_download_unlocked';
 
 interface PreviewPanelProps {
   selectedClip: Clip | null;
@@ -15,6 +17,9 @@ interface PreviewPanelProps {
   onPlayFlow: () => void;
   currentlyPlayingClipId: string | null;
   className?: string;
+  onUnlockWatermark?: (clipId: string) => void;
+  unlockingClipId?: string | null;
+  getDisplayedVideoUrl?: (clip: Clip | undefined) => string | undefined;
 }
 
 export function PreviewPanel({
@@ -25,9 +30,15 @@ export function PreviewPanel({
   onPlayFlow,
   currentlyPlayingClipId,
   className,
+  onUnlockWatermark,
+  unlockingClipId,
+  getDisplayedVideoUrl,
 }: PreviewPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [downloadUnlocked, setDownloadUnlocked] = useState(false);
+  const [isAdUnlocking, setIsAdUnlocking] = useState(false);
+  const [fullscreenClip, setFullscreenClip] = useState<Clip | null>(null);
 
   useEffect(() => {
     if (videoRef.current && selectedClip?.videoUrl) {
@@ -35,6 +46,26 @@ export function PreviewPanel({
       setIsPlaying(false);
     }
   }, [selectedClip?.videoUrl]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDownloadUnlocked(
+        window.sessionStorage.getItem(DOWNLOAD_UNLOCK_KEY) === '1'
+      );
+    }
+  }, []);
+
+  const unlockDownloadWithAd = async () => {
+    if (downloadUnlocked) return true;
+    setIsAdUnlocking(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(DOWNLOAD_UNLOCK_KEY, '1');
+    }
+    setDownloadUnlocked(true);
+    setIsAdUnlocking(false);
+    return true;
+  };
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -47,13 +78,15 @@ export function PreviewPanel({
     }
   };
 
-  const handleDownload = () => {
-    if (selectedClip?.videoUrl) {
-      const a = document.createElement('a');
-      a.href = selectedClip.videoUrl;
-      a.download = `${selectedClip.title}.mp4`;
-      a.click();
+  const handleDownload = async () => {
+    if (!displayedVideoUrl) return;
+    if (!downloadUnlocked) {
+      await unlockDownloadWithAd();
     }
+    const a = document.createElement('a');
+    a.href = displayedVideoUrl;
+    a.download = `${selectedClip?.title ?? 'video'}.mp4`;
+    a.click();
   };
 
   const handleCopyLink = () => {
@@ -62,7 +95,35 @@ export function PreviewPanel({
     }
   };
 
+  const handleOpenFullscreen = () => {
+    if (displayedVideoUrl && selectedClip) {
+      setFullscreenClip(selectedClip);
+    }
+  };
+
+  const handleCloseFullscreen = () => {
+    setFullscreenClip(null);
+  };
+
   const hasReadyClips = clips.some((clip) => clip.status === 'ready' && clip.videoUrl);
+  const downloadTitle = downloadUnlocked
+    ? 'Download video'
+    : isAdUnlocking
+    ? '광고 시청 중...'
+    : '광고 보고 다운로드';
+
+  const displayedVideoUrl = getDisplayedVideoUrl
+    ? getDisplayedVideoUrl(selectedClip ?? undefined)
+    : selectedClip?.videoUrl;
+
+  const canShowUnlockButton =
+    selectedClip &&
+    selectedClip.videoUrl &&
+    selectedClip.watermarkedUrl &&
+    !selectedClip.hasUnlockedClean &&
+    onUnlockWatermark;
+
+  const isUnlocking = unlockingClipId === selectedClip?.id;
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
@@ -92,12 +153,27 @@ export function PreviewPanel({
           <Button
             size="sm"
             variant="ghost"
-            onClick={handleDownload}
+            onClick={handleOpenFullscreen}
             disabled={!selectedClip?.videoUrl || isGenerating}
             className="rounded-full px-3 text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-40"
+            title="Fullscreen preview"
+          >
+            <Maximize2 className="h-4 w-4" />
+            <span className="sr-only">Fullscreen preview</span>
+          </Button>
+          <span className="hidden h-4 w-px bg-white/15 sm:inline-block" />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDownload}
+            disabled={!selectedClip?.videoUrl || isGenerating || isAdUnlocking}
+            className="rounded-full px-3 text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-40"
+            title={downloadTitle}
           >
             <Download className="h-4 w-4" />
+            <span className="sr-only">{downloadTitle}</span>
           </Button>
+          <span className="hidden h-4 w-px bg-white/15 sm:inline-block" />
           <Button
             size="sm"
             variant="ghost"
@@ -107,6 +183,36 @@ export function PreviewPanel({
           >
             <Link2 className="h-4 w-4" />
           </Button>
+          {canShowUnlockButton && (
+            <>
+              <span className="hidden h-4 w-px bg-white/15 sm:inline-block" />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => selectedClip && onUnlockWatermark(selectedClip.id)}
+                disabled={isUnlocking || isGenerating}
+                className="rounded-full border border-purple-500/60 bg-purple-500/10 px-3 text-xs text-purple-100 hover:bg-purple-500/20 disabled:opacity-50"
+                title={isUnlocking ? '광고 시청 중...' : '광고 보고 워터마크 제거'}
+              >
+                {isUnlocking ? (
+                  <>
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    <span className="hidden sm:inline">광고 시청 중...</span>
+                  </>
+                ) : (
+                  <span className="hidden sm:inline">광고 보고 워터마크 제거</span>
+                )}
+              </Button>
+            </>
+          )}
+          {selectedClip?.hasUnlockedClean && (
+            <>
+              <span className="hidden h-4 w-px bg-white/15 sm:inline-block" />
+              <span className="rounded-full border border-green-500/40 bg-green-500/10 px-3 py-1.5 text-xs text-green-100">
+                워터마크 제거됨
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -158,18 +264,21 @@ export function PreviewPanel({
           </div>
         )}
 
-        {selectedClip?.videoUrl && !isGenerating && (
+        {displayedVideoUrl && !isGenerating && (
           <div className="flex w-full items-center justify-center">
             <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-3 shadow-[0_30px_60px_rgba(0,0,0,0.65)]">
-              <video
-                ref={videoRef}
-                src={selectedClip.videoUrl}
-                controls
-                className="max-h-[520px] w-full rounded-2xl"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
-              {currentlyPlayingClipId === selectedClip.id && (
+              <div className="relative overflow-hidden rounded-2xl bg-black">
+                <video
+                  ref={videoRef}
+                  src={displayedVideoUrl}
+                  controls
+                  playsInline
+                  className="max-h-[520px] w-full rounded-2xl bg-black"
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                />
+              </div>
+              {currentlyPlayingClipId === selectedClip?.id && (
                 <div className="absolute right-4 top-4 rounded-full bg-[#c4b5fd]/20 px-3 py-1 text-xs font-semibold text-[#c4b5fd]">
                   Playing in flow
                 </div>
@@ -178,6 +287,34 @@ export function PreviewPanel({
           </div>
         )}
       </div>
+
+      {fullscreenClip && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 px-4 py-10 backdrop-blur-sm">
+          <div className="relative w-full max-w-5xl space-y-4">
+            <button
+              type="button"
+              onClick={handleCloseFullscreen}
+              className="absolute right-2 top-2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition"
+              aria-label="Close fullscreen"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <video
+                src={
+                  getDisplayedVideoUrl
+                    ? getDisplayedVideoUrl(fullscreenClip)
+                    : fullscreenClip.videoUrl
+                }
+                controls
+                autoPlay
+                className="w-full rounded-2xl bg-black"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

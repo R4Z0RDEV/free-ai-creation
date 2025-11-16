@@ -23,16 +23,29 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WatermarkedPreview } from "@/components/ui/WatermarkedPreview";
+
+type GeneratedImage = {
+  id: string;
+  prompt: string;
+  createdAt: string;
+  originalUrl: string;
+  watermarkedUrl: string;
+  cleanUrl?: string;
+  hasUnlockedClean?: boolean;
+};
+
+const getBaseUrl = () =>
+  process.env.NEXT_PUBLIC_BASE_URL ??
+  (typeof window !== 'undefined'
+    ? window.location.origin
+    : 'https://free-ai-creation.com');
 
 export default function ImageStudio() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [resolution, setResolution] = useState('1024x1024');
   const [style, setStyle] = useState('photo');
-  const [history, setHistory] = useState<
-    Array<{ url: string; prompt: string }>
-  >([]);
   const [seed, setSeed] = useState<number | ''>('');
 
   // Resolution presets map to concrete width/height, width/height are the source of truth.
@@ -50,6 +63,21 @@ export default function ImageStudio() {
   const [guidanceScale, setGuidanceScale] = useState<number | ''>(7.5);
   const [negativePrompt, setNegativePrompt] = useState('');
   const [numInferenceSteps, setNumInferenceSteps] = useState<number | ''>(50);
+  const [history, setHistory] = useState<GeneratedImage[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [unlockingImageId, setUnlockingImageId] = useState<string | null>(null);
+
+  const getDisplayedUrl = (image?: GeneratedImage) => {
+    if (!image) return '';
+    if (image.hasUnlockedClean && image.cleanUrl) {
+      return image.cleanUrl;
+    }
+    return image.watermarkedUrl;
+  };
+
+  const currentImage =
+    history.find((item) => item.id === selectedImageId) ?? history[0] ?? null;
+  const displayedCurrentUrl = getDisplayedUrl(currentImage);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -65,7 +93,6 @@ export default function ImageStudio() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          // keep resolution in sync with current width/height for clarity
           resolution:
             typeof width === 'number' && typeof height === 'number'
               ? `${width}x${height}`
@@ -87,11 +114,20 @@ export default function ImageStudio() {
       }
 
       const data = await response.json();
-      setGeneratedImage(data.imageUrl);
-      setHistory((prev) => [
-        { url: data.imageUrl, prompt },
-        ...prev.slice(0, 9),
-      ]);
+      const newImage: GeneratedImage = {
+        id: data.id,
+        prompt,
+        createdAt: data.createdAt ?? new Date().toISOString(),
+        originalUrl: data.originalUrl ?? '',
+        watermarkedUrl: data.watermarkedUrl ?? '',
+        cleanUrl: data.originalUrl ?? '',
+        hasUnlockedClean: false,
+      };
+      setHistory((prev) => {
+        const next = [newImage, ...prev];
+        return next.slice(0, 10);
+      });
+      setSelectedImageId(newImage.id);
       toast.success('Image generated successfully!');
     } catch (error) {
       console.error('Generation error:', error);
@@ -101,12 +137,34 @@ export default function ImageStudio() {
     }
   };
 
-  const handleDownload = () => {
-    if (generatedImage) {
-      const a = document.createElement('a');
-      a.href = generatedImage;
-      a.download = `ai-image-${Date.now()}.png`;
-      a.click();
+  const handleDownloadWithGate = () => {
+    if (!currentImage) return;
+    const url = getDisplayedUrl(currentImage);
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-image-${currentImage.id}.png`;
+    a.click();
+  };
+
+  const handleUnlockWatermark = async () => {
+    if (!currentImage || currentImage.hasUnlockedClean) return;
+    setUnlockingImageId(currentImage.id);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setHistory((prev) =>
+        prev.map((image) =>
+          image.id === currentImage.id
+            ? {
+                ...image,
+                hasUnlockedClean: true,
+                cleanUrl: image.cleanUrl ?? image.originalUrl,
+              }
+            : image,
+        ),
+      );
+    } finally {
+      setUnlockingImageId(null);
     }
   };
 
@@ -116,7 +174,7 @@ export default function ImageStudio() {
         eyebrow="AI IMAGE STUDIO"
         title="Create images with Free AI Creation."
         description="Generate high-quality images in different styles — photoreal, illustration, anime and more. Completely free and ad-supported, no login required."
-      >
+          >
         <p className="mt-3 text-xs text-white/60">
           Image model: Stable Diffusion on Replicate
         </p>
@@ -564,21 +622,37 @@ export default function ImageStudio() {
                       Latest generated image appears here.
                     </p>
                   </div>
-                  {generatedImage && (
-                    <Button
-                      onClick={handleDownload}
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full border-white/20 bg-white/5 text-xs text-slate-100 hover:bg-white/10"
-                    >
-                      <Download className="w-4 h-4 mr-1.5" />
-                      Download
-                    </Button>
+                  {currentImage && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleDownloadWithGate}
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full border-white/20 bg-white/5 text-xs text-slate-100 hover:bg-white/10"
+                        title="물방울 없이 다운로드하려면 광고 후 제공되는 원본을 받아보세요."
+                      >
+                        <Download className="w-4 h-4 mr-1.5" />
+                        Download
+                      </Button>
+                      {currentImage.cleanUrl && !currentImage.hasUnlockedClean && (
+                        <Button
+                          onClick={handleUnlockWatermark}
+                          size="sm"
+                          variant="ghost"
+                          disabled={unlockingImageId === currentImage.id}
+                          className="rounded-full border border-purple-500/40 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 hover:bg-purple-500/10 disabled:opacity-50"
+                        >
+                          {unlockingImageId === currentImage.id
+                            ? "광고 시청 중..."
+                            : "광고 보고 워터마크 제거"}
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
 
                 <div className="flex flex-1 items-center justify-center rounded-2xl bg-black/40">
-                  {!generatedImage && !isGenerating && (
+                  {!currentImage && !isGenerating && (
                     <div className="space-y-4 text-center">
                       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/25 to-fuchsia-500/25">
                         <ImageIcon className="h-10 w-10 text-violet-300" />
@@ -607,12 +681,14 @@ export default function ImageStudio() {
                     </div>
                   )}
 
-                  {generatedImage && !isGenerating && (
-                    <img
-                      src={generatedImage}
-                      alt="Generated"
-                      className="max-h-[340px] max-w-full rounded-2xl object-contain"
-                    />
+                  {currentImage && !isGenerating && (
+                    <WatermarkedPreview hasWatermark={false}>
+                      <img
+                        src={displayedCurrentUrl}
+                        alt="Generated"
+                        className="max-h-[340px] max-w-full w-full object-contain"
+                      />
+                    </WatermarkedPreview>
                   )}
                 </div>
               </Card>
@@ -640,25 +716,30 @@ export default function ImageStudio() {
                       No history yet. Generated images will appear here.
                     </p>
                   ) : (
-                    history.map((item, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => setGeneratedImage(item.url)}
-                        className="group w-full text-left"
-                      >
-                        <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-white/8 bg-black/40 group-hover:border-violet-400/70 transition-colors">
-                          <img
-                            src={item.url}
-                            alt={item.prompt}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                        <p className="mt-1 line-clamp-2 text-[11px] text-slate-400 group-hover:text-slate-200">
-                          {item.prompt}
-                        </p>
-                      </button>
-                    ))
+                    history.map((item) => {
+                      const displayedHistoryUrl = getDisplayedUrl(item);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setSelectedImageId(item.id)}
+                          className="group w-full text-left"
+                        >
+                          <WatermarkedPreview hasWatermark={false}>
+                            <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-white/8 bg-black/40 group-hover:border-violet-400/70 transition-colors">
+                              <img
+                                src={displayedHistoryUrl}
+                                alt={item.prompt}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          </WatermarkedPreview>
+                          <p className="mt-1 line-clamp-2 text-[11px] text-slate-400 group-hover:text-slate-200">
+                            {item.prompt}
+                          </p>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </Card>

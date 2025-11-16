@@ -30,9 +30,18 @@ export default function VideoStudio() {
     string | null
   >(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [unlockingClipId, setUnlockingClipId] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const flowPlaybackIndexRef = useRef(0);
+
+  const getDisplayedVideoUrl = (clip: Clip | undefined) => {
+    if (!clip) return undefined;
+    if (clip.hasUnlockedClean && clip.cleanUrl) {
+      return clip.cleanUrl;
+    }
+    return clip.videoUrl;
+  };
 
   useEffect(() => {
     const savedProject = loadProjectFromLocalStorage();
@@ -172,6 +181,8 @@ export default function VideoStudio() {
       updateClip(clipId, {
         status: 'ready',
         videoUrl: result.videoUrl,
+        watermarkedUrl: result.videoUrl,
+        hasUnlockedClean: false,
       });
 
       toast.success('Video generated successfully!');
@@ -274,6 +285,54 @@ export default function VideoStudio() {
     playClipAtIndex(readyClips, 0);
   };
 
+  const handleUnlockWatermark = async (clipId: string) => {
+    const clip = project.clips.find((c) => c.id === clipId);
+    if (!clip || !clip.videoUrl || clip.hasUnlockedClean) {
+      return;
+    }
+
+    setUnlockingClipId(clipId);
+
+    try {
+      // Simulate ad watching (2 seconds)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Extract media ID from the watermarked URL
+      const urlMatch = clip.videoUrl.match(/\/api\/media\/([^/]+)$/);
+      if (!urlMatch) {
+        toast.error('워터마크 제거에 실패했습니다.');
+        return;
+      }
+
+      const mediaId = urlMatch[1];
+
+      // Call unlock API to get clean URL
+      const response = await fetch('/api/unlock-video-watermark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mediaId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unlock watermark');
+      }
+
+      const data = await response.json();
+
+      updateClip(clipId, {
+        hasUnlockedClean: true,
+        cleanUrl: data.cleanUrl,
+      });
+
+      toast.success('워터마크 없는 영상을 사용할 수 있습니다.');
+    } catch (error) {
+      console.error('Unlock watermark error:', error);
+      toast.error('워터마크 제거에 실패했습니다.');
+    } finally {
+      setUnlockingClipId(null);
+    }
+  };
+
   const playClipAtIndex = (readyClips: Clip[], index: number) => {
     if (index >= readyClips.length) {
       setCurrentlyPlayingClipId(null);
@@ -316,23 +375,23 @@ export default function VideoStudio() {
         title="Build multi-clip AI videos in one flow."
         description="Stack clips, write prompts, then generate everything with Seedance Lite on Replicate. Completely free to start, ad-supported, no login required."
         actions={
-          <Button
-            onClick={handleGenerateFlow}
-            disabled={isGeneratingFlow || isGenerating}
+            <Button
+              onClick={handleGenerateFlow}
+              disabled={isGeneratingFlow || isGenerating}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(139,92,246,0.65)] hover:shadow-[0_0_35px_rgba(139,92,246,0.9)] transition-shadow"
-          >
-            {isGeneratingFlow ? (
-              <>
+            >
+              {isGeneratingFlow ? (
+                <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating flow…
-              </>
-            ) : (
-              <>
+                  Generating flow…
+                </>
+              ) : (
+                <>
                 <Zap className="h-4 w-4" />
                 Generate flow
-              </>
-            )}
-          </Button>
+                </>
+              )}
+            </Button>
         }
       >
         <p className="mt-3 text-xs text-white/60">
@@ -374,17 +433,20 @@ export default function VideoStudio() {
               )}
             </div>
 
-            <PreviewPanel
+                <PreviewPanel
               className="panel min-h-[560px]"
-              selectedClip={selectedClip}
-              clips={project.clips}
-              isGenerating={generatingClipId === selectedClip?.id}
-              generationProgress={generationProgress}
-              onPlayFlow={handlePlayFlow}
-              currentlyPlayingClipId={currentlyPlayingClipId}
-            />
-          </div>
-        </div>
+                  selectedClip={selectedClip}
+                  clips={project.clips}
+                  isGenerating={generatingClipId === selectedClip?.id}
+                  generationProgress={generationProgress}
+                  onPlayFlow={handlePlayFlow}
+                  currentlyPlayingClipId={currentlyPlayingClipId}
+                  onUnlockWatermark={handleUnlockWatermark}
+                  unlockingClipId={unlockingClipId}
+                  getDisplayedVideoUrl={getDisplayedVideoUrl}
+                />
+              </div>
+            </div>
       </section>
 
       <TimelineBar

@@ -248,13 +248,13 @@ export function ClipSettings({
           <div className="space-y-2">
             <Label className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
               Duration ({modelConfig.displayName})
-            </Label>
+          </Label>
             <p className="text-xs text-white/40">
               {modelConfig.minDurationSeconds}s – {modelConfig.maxDurationSeconds}s · Current:{' '}
               <span className="text-white/80">{duration}s</span>
             </p>
-            <Slider
-              value={[duration]}
+          <Slider
+            value={[duration]}
               onValueChange={(values) => {
                 const next = Math.min(
                   modelConfig.maxDurationSeconds,
@@ -262,10 +262,10 @@ export function ClipSettings({
                 );
                 setDuration(next);
               }}
-              onValueCommit={handleBlur}
-              min={modelConfig.minDurationSeconds}
-              max={modelConfig.maxDurationSeconds}
-              step={1}
+            onValueCommit={handleBlur}
+            min={modelConfig.minDurationSeconds}
+            max={modelConfig.maxDurationSeconds}
+            step={1}
               className="mt-3"
             />
           </div>
@@ -389,7 +389,7 @@ export function ClipSettings({
                   }}
                   className="flex-1 mt-1 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
                 />
-                <input
+              <input
                   ref={initImageFileInputRef}
                   type="file"
                   accept="image/*"
@@ -488,7 +488,7 @@ export function ClipSettings({
                     "h-3 w-3 rounded-full border border-white/40",
                     cameraFixed && "border-transparent bg-emerald-400",
                   )}
-                />
+              />
                 {cameraFixed ? "Fixed" : "Free"}
               </button>
             </div>
@@ -539,8 +539,8 @@ export function ClipSettings({
                   <Upload className="h-3 w-3" />
                   Upload
                 </Button>
-              </div>
-            </div>
+          </div>
+        </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">

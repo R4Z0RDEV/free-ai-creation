@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import { saveWatermarkedImage } from "@/lib/watermarkStore";
+import { applyImageWatermarkFromUrl } from "@/lib/imageWatermark";
+import { getBaseUrl } from "@/lib/baseUrl";
 
 const REPLICATE_PREDICTIONS_URL = "https://api.replicate.com/v1/predictions";
 const STABLE_DIFFUSION_VERSION =
@@ -10,6 +14,7 @@ type ReplicatePrediction = {
 };
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function buildStableDiffusionPrompt(
   prompt: string,
@@ -156,7 +161,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ imageUrl }, { status: 200 });
+    const id = randomUUID();
+    const watermarkedBuffer = await applyImageWatermarkFromUrl(imageUrl);
+    await saveWatermarkedImage(id, watermarkedBuffer, imageUrl);
+
+    const baseUrl = getBaseUrl(req);
+    const watermarkedUrl = `${baseUrl}/api/media/${id}`;
+    const createdAt = new Date().toISOString();
+
+    return NextResponse.json(
+      {
+        id,
+        prompt,
+        createdAt,
+        originalUrl: imageUrl,
+        watermarkedUrl,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Replicate image route error:", error);
     return NextResponse.json(

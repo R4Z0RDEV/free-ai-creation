@@ -25,12 +25,28 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+type UpscaleResult = {
+  id: string;
+  watermarkedUrl: string;
+  cleanUrl?: string;
+  hasUnlockedClean?: boolean;
+};
+
+const getDisplayedUrl = (result: UpscaleResult | null) => {
+  if (!result) return null;
+  if (result.hasUnlockedClean && result.cleanUrl) {
+    return result.cleanUrl;
+  }
+  return result.watermarkedUrl;
+};
+
 export default function UpscaleStudio() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [upscaledImage, setUpscaledImage] = useState<string | null>(null);
+  const [upscaleResult, setUpscaleResult] = useState<UpscaleResult | null>(null);
   const [isUpscaling, setIsUpscaling] = useState(false);
+  const [isUnlockingClean, setIsUnlockingClean] = useState(false);
   const [scale, setScale] = useState(4);
-  const [mode, setMode] = useState('standard');
+  const [mode, setMode] = useState("standard");
   const [faceEnhance, setFaceEnhance] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +61,8 @@ export default function UpscaleStudio() {
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalImage(e.target?.result as string);
-        setUpscaledImage(null);
+        setUpscaleResult(null);
+        setIsUnlockingClean(false);
       };
       reader.readAsDataURL(file);
     }
@@ -58,6 +75,7 @@ export default function UpscaleStudio() {
     }
 
     setIsUpscaling(true);
+    setIsUnlockingClean(false);
 
     try {
       const response = await fetch('/api/upscale', {
@@ -76,7 +94,14 @@ export default function UpscaleStudio() {
       }
 
       const data = await response.json();
-      setUpscaledImage(data.imageUrl);
+      const result: UpscaleResult = {
+        id: data.id,
+        watermarkedUrl: data.watermarkedUrl ?? data.imageUrl ?? '',
+        cleanUrl: data.originalUrl ?? '',
+        hasUnlockedClean: false,
+      };
+      setUpscaleResult(result);
+      setIsUnlockingClean(false);
       toast.success('Image upscaled successfully!');
     } catch (error) {
       console.error('Upscaling error:', error);
@@ -87,13 +112,36 @@ export default function UpscaleStudio() {
   };
 
   const handleDownload = () => {
-    if (upscaledImage) {
-      const a = document.createElement('a');
-      a.href = upscaledImage;
-      a.download = `upscaled-${scale}x-${Date.now()}.png`;
-      a.click();
+    const url = getDisplayedUrl(upscaleResult);
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `upscaled-${scale}x-${Date.now()}.png`;
+    a.click();
+  };
+
+  const handleUnlockClean = async () => {
+    if (!upscaleResult || upscaleResult.hasUnlockedClean || !upscaleResult.cleanUrl) {
+      return;
+    }
+    setIsUnlockingClean(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setUpscaleResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              hasUnlockedClean: true,
+            }
+          : prev,
+      );
+      toast.success('워터마크 없는 업스케일을 사용할 수 있습니다.');
+    } finally {
+      setIsUnlockingClean(false);
     }
   };
+
+  const upscaledImage = getDisplayedUrl(upscaleResult);
 
   return (
     <AppShell>
@@ -143,11 +191,11 @@ export default function UpscaleStudio() {
 
               <TooltipProvider>
                 <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-4">
-                  <div className="space-y-2">
+              <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                        Scale
-                      </Label>
+                <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
+                  Scale
+                </Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
@@ -163,23 +211,23 @@ export default function UpscaleStudio() {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <Select
+                <Select
                       value={String(scale)}
                       onValueChange={(value) => setScale(Number(value))}
-                      disabled={isUpscaling}
-                    >
-                      <SelectTrigger className="rounded-2xl bg-white/5 border-white/10 text-sm text-white">
-                        <SelectValue placeholder="Select scale" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#050508] border-white/10 text-sm text-white">
+                  disabled={isUpscaling}
+                >
+                  <SelectTrigger className="rounded-2xl bg-white/5 border-white/10 text-sm text-white">
+                    <SelectValue placeholder="Select scale" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#050508] border-white/10 text-sm text-white">
                         {[2, 4, 6, 8, 10].map((s) => (
                           <SelectItem key={s} value={String(s)}>
                             {s}x
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -262,14 +310,27 @@ export default function UpscaleStudio() {
               </Button>
 
               {upscaledImage && (
-                <Button
-                  onClick={handleDownload}
-                  variant="outline"
-                  className="w-full rounded-2xl border-white/15 bg-white/[0.02] text-sm text-white hover:bg-white/10"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Upscaled
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handleDownload}
+                    variant="outline"
+                    className="w-full rounded-2xl border-white/15 bg-white/[0.02] text-sm text-white hover:bg-white/10"
+                    disabled={isUpscaling}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Upscaled
+                  </Button>
+                  {upscaleResult?.cleanUrl && !upscaleResult.hasUnlockedClean && (
+                    <Button
+                      onClick={handleUnlockClean}
+                      variant="ghost"
+                      disabled={isUnlockingClean}
+                      className="w-full rounded-2xl border border-purple-500/40 bg-purple-500/5 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 hover:bg-purple-500/15 disabled:opacity-50"
+                    >
+                      {isUnlockingClean ? "광고 시청 중..." : "광고 보고 워터마크 제거"}
+                    </Button>
+                  )}
+                </div>
               )}
 
               <div className="pt-2 border-t border-white/5 text-[11px] text-[#8b8b8b] leading-relaxed">

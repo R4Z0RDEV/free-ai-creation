@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { saveWatermarkedMedia } from "@/lib/watermarkStore";
+import { getBaseUrl } from "@/lib/baseUrl";
+import { applyVideoWatermark } from "@/lib/videoWatermark";
 
 const REPLICATE_SEEDANCE_URL =
   "https://api.replicate.com/v1/models/bytedance/seedance-1-lite/predictions";
@@ -9,6 +16,7 @@ type ReplicatePrediction = {
 };
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 interface GenerateVideoRequest {
   prompt: string;
@@ -140,7 +148,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ videoUrl }, { status: 200 });
+    const baseUrl = getBaseUrl(request);
+    const id = randomUUID();
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "fac-video-"));
+    const inputPath = path.join(tmpDir, "input.mp4");
+    const outputPath = path.join(tmpDir, "output.mp4");
+    let finalVideoUrl = videoUrl;
+
+    try {
+      const downloadRes = await fetch(videoUrl);
+      if (!downloadRes.ok) {
+        throw new Error("Failed to download generated video");
+      }
+      const buffer = Buffer.from(await downloadRes.arrayBuffer());
+      await fs.writeFile(inputPath, buffer);
+      await applyVideoWatermark(inputPath, outputPath);
+      const watermarked = await fs.readFile(outputPath);
+      await saveWatermarkedMedia(id, watermarked, {
+        originalUrl: videoUrl,
+        mimeType: "video/mp4",
+        extension: "mp4",
+      });
+      finalVideoUrl = `${baseUrl}/api/media/${id}`;
+    } catch (error) {
+      console.error("Video watermark pipeline failed; using original URL", error);
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
+
+    return NextResponse.json({ videoUrl: finalVideoUrl }, { status: 200 });
   } catch (error) {
     console.error("Replicate video route error:", error);
     return NextResponse.json(

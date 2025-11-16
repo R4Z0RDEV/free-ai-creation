@@ -46,6 +46,10 @@ export interface Clip {
   camera_fixed?: boolean;
   last_frame_image?: string;
   reference_images?: string[];
+  // Watermark unlock state
+  watermarkedUrl?: string;
+  cleanUrl?: string;
+  hasUnlockedClean?: boolean;
 }
 
 export interface Project {

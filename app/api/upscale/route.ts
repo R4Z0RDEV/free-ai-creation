@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import { applyImageWatermarkFromUrl } from "@/lib/imageWatermark";
+import { saveWatermarkedImage } from "@/lib/watermarkStore";
+import { getBaseUrl } from "@/lib/baseUrl";
 
 const REPLICATE_ENDPOINT =
   "https://api.replicate.com/v1/models/nightmareai/real-esrgan/predictions";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type UpscaleRequest = {
   image?: string;
@@ -103,7 +108,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ imageUrl });
+    const id = randomUUID();
+    const buffer = await applyImageWatermarkFromUrl(imageUrl);
+    await saveWatermarkedImage(id, buffer, imageUrl);
+    const baseUrl = getBaseUrl(req);
+    const watermarkedUrl = `${baseUrl}/api/media/${id}`;
+    const createdAt = new Date().toISOString();
+
+    return NextResponse.json({
+      id,
+      createdAt,
+      originalUrl: imageUrl,
+      watermarkedUrl,
+    });
   } catch (error) {
     console.error("Upscale route error:", error);
     return NextResponse.json(

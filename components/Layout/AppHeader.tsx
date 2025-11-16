@@ -1,9 +1,11 @@
-'use client';
+ 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import logoSrc from '@/public/logo.png';
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -36,13 +38,16 @@ export function AppHeader() {
     >
       <div className="page-container">
         <div className="flex h-16 items-center justify-between md:h-18">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-lg font-semibold text-white hover:text-[#c4b5fd] transition-colors"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Free AI Creation
+          <div className="flex items-center gap-3 text-white transition-colors hover:text-[#c4b5fd]">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src={logoSrc}
+                width={240}
+                height={100}
+                alt="Free AI Creation logo"
+                className="rounded-full"
+                priority
+              />
             </Link>
             <span className="hidden text-[10px] font-semibold uppercase tracking-[0.26em] text-white/40 sm:inline">
               Studio
