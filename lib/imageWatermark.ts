@@ -29,7 +29,6 @@ export async function applyImageWatermarkFromUrl(
         input: watermark,
         gravity: "south",
         blend: "over",
-        opacity: 0.9,
       },
     ])
     .png()
