@@ -23,6 +23,7 @@ export function AppHeader() {
     { href: '/studio/video', label: 'AI Video' },
     { href: '/studio/image', label: 'AI Image' },
     { href: '/studio/upscale', label: 'Upscaling' },
+    { href: '/guide', label: 'Guide' },
   ];
 
   const isActive = (href: string) => pathname.startsWith(href);
