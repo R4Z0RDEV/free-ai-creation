@@ -27,3 +27,17 @@ export function AdfitSideBanners() {
     </>
   );
 }
+
+export function AdfitBottomBanner() {
+  return (
+    <div className="hidden xl:block fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+      <ins
+        className="kakao_ad_area"
+        style={{ display: 'none' }}
+        data-ad-unit="DAN-8QkwSveRcbFBbZ1n"
+        data-ad-width="728"
+        data-ad-height="90"
+      />
+    </div>
+  );
+}

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
 import { AdsBottomBar, AdsLeftBar, AdsRightBar } from '../AdBars';
-import { AdfitSideBanners } from '@/components/AdfitSideBanners';
+import { AdfitBottomBanner, AdfitSideBanners } from '@/components/AdfitSideBanners';
 
 type AdBannerProps = {
   slot: string;
@@ -82,6 +82,7 @@ export function AppShell({
         {withFooter && <AppFooter />}
       </div>
       <AdfitSideBanners />
+      <AdfitBottomBanner />
       {showAds && (
         <>
           <AdsLeftBar />
