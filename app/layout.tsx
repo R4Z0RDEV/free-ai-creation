@@ -35,6 +35,10 @@ export default function RootLayout({
         {children}
         <Toaster richColors position="top-center" />
         <AdblockNotice />
+        <Script
+          src="//t1.daumcdn.net/kas/static/ba.min.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

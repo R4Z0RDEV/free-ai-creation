@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
 import { AdsBottomBar, AdsLeftBar, AdsRightBar } from '../AdBars';
+import { AdfitSideBanners } from '@/components/AdfitSideBanners';
 
 type AdBannerProps = {
   slot: string;
@@ -74,12 +75,13 @@ export function AppShell({
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 -top-48 h-80 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.5),transparent_65%)] blur-3xl" />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(15,23,42,0.9),transparent_60%)]" />
-          </div>
+      </div>
       <div className="relative flex min-h-screen flex-col">
         <AppHeader />
         <main className={cn('flex-1', className)}>{children}</main>
         {withFooter && <AppFooter />}
-        </div>
+      </div>
+      <AdfitSideBanners />
       {showAds && (
         <>
           <AdsLeftBar />
