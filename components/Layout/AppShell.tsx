@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
 import { AdsBottomBar, AdsLeftBar, AdsRightBar } from '../AdBars';
-import { AdfitBottomBanner, AdfitSideBanners } from '@/components/AdfitSideBanners';
+import { SideAdfitLeft, SideAdfitRight } from '@/components/ui/SideAdfit';
 
 type AdBannerProps = {
   slot: string;
@@ -81,8 +81,12 @@ export function AppShell({
         <main className={cn('flex-1', className)}>{children}</main>
         {withFooter && <AppFooter />}
       </div>
-      <AdfitSideBanners />
-      <AdfitBottomBanner />
+      <div className="hidden lg:block fixed left-4 top-1/2 -translate-y-1/2 z-40">
+        <SideAdfitLeft />
+      </div>
+      <div className="hidden lg:block fixed right-4 top-1/2 -translate-y-1/2 z-40">
+        <SideAdfitRight />
+      </div>
       {showAds && (
         <>
           <AdsLeftBar />
