@@ -1,282 +1,250 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Video, Image as ImageIcon, Maximize, Check, ArrowRight } from 'lucide-react';
+import { Video, Image as ImageIcon, Maximize, Check, ArrowRight, Music, Mic, Scissors, Eraser, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/Layout/AppShell';
-
-const fadeIn = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: 'easeOut' },
-};
-
-const stagger = {
-  animate: {
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
+import { GlassCard } from '@/components/ui/GlassCard';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const tools = [
   {
-    icon: Video,
-    title: 'AI Video Studio',
-    description: 'Generate cinematic clips with Seedance Lite on Replicate.',
-    href: '/studio/video',
-  },
-  {
     icon: ImageIcon,
     title: 'AI Image Lab',
-    description: 'Create concept art, thumbnails, and key visuals.',
+    description: 'Create stunning concept art and visuals.',
     href: '/studio/image',
+    span: 'col-span-1 md:col-span-2 lg:col-span-2',
+    gradient: 'from-blue-500/20 to-cyan-500/20',
+  },
+  {
+    icon: Video,
+    title: 'AI Video Studio',
+    description: 'Generate cinematic clips.',
+    href: '/studio/video',
+    span: 'col-span-1',
+    gradient: 'from-sky-500/20 to-blue-500/20',
+  },
+  {
+    icon: Music,
+    title: 'AI Audio FX',
+    description: 'Generate sound effects.',
+    href: '/studio/audio',
+    span: 'col-span-1',
+    gradient: 'from-emerald-500/20 to-teal-500/20',
+  },
+  {
+    icon: Music,
+    title: 'AI Song Creator',
+    description: 'Compose full songs with lyrics.',
+    href: '/studio/song',
+    span: 'col-span-1 md:col-span-2',
+    gradient: 'from-cyan-500/20 to-sky-500/20',
   },
   {
     icon: Maximize,
     title: 'AI Upscaling',
-    description: 'Sharpen and enhance low-resolution footage and images.',
+    description: 'Enhance resolution.',
     href: '/studio/upscale',
+    span: 'col-span-1',
+    gradient: 'from-blue-400/20 to-cyan-400/20',
+  },
+  {
+    icon: Mic,
+    title: 'AI TTS',
+    description: 'Lifelike speech synthesis.',
+    href: '/studio/tts',
+    span: 'col-span-1',
+    gradient: 'from-sky-500/20 to-indigo-500/20',
+  },
+  {
+    icon: Scissors,
+    title: 'Remove BG',
+    description: 'Instant transparency.',
+    href: '/studio/remove-bg',
+    span: 'col-span-1',
+    gradient: 'from-gray-500/20 to-slate-500/20',
+  },
+  {
+    icon: Eraser,
+    title: 'Magic Eraser',
+    description: 'Remove objects.',
+    href: '/studio/eraser',
+    span: 'col-span-1',
+    gradient: 'from-slate-500/20 to-gray-500/20',
   },
 ];
 
 const benefits = [
   {
-    title: 'No login, ever',
-    description: 'Open the studio and start creating immediately. No account, no friction.',
+    title: 'No Login Required',
+    description: 'Start creating immediately without any friction.',
   },
   {
-    title: 'Completely free',
-    description: 'All tools are free to use, supported by banner and rewarded ads.',
+    title: 'Completely Free',
+    description: 'Access all premium AI tools at no cost.',
   },
   {
-    title: 'Modern AI models',
-    description: 'Seedance Lite and more – picked and wired for creators, not just demos.',
+    title: 'Pro-Grade Models',
+    description: 'Powered by state-of-the-art AI technology.',
   },
 ];
 
 export default function Home() {
   return (
     <AppShell>
-      {/* HERO */}
-      <section className="relative flex min-h-[86vh] items-center justify-center overflow-hidden bg-[#050508]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.7]"
-          style={{
-            backgroundImage:
-              "url('https://images.pexels.com/photos/6898859/pexels-photo-6898859.jpeg?auto=compress&cs=tinysrgb&w=1920')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/80 to-[#050508] mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.45),_transparent_55%)]" />
-
-        <div className="relative z-10 w-full">
-        <div className="page-container flex flex-col gap-10 py-20 sm:py-24 lg:py-28">
-            <motion.div
-              initial="initial"
-              animate="animate"
-              variants={stagger}
-              className="space-y-6 text-center"
-            >
-              <motion.div variants={fadeIn}>
-                <span className="eyebrow text-xs font-semibold tracking-[0.2em] text-white/60">
-                  AI VIDEO · AI IMAGE · FREE
-                </span>
-              </motion.div>
-
-              <motion.h1
-                variants={fadeIn}
-                className="headline-xl text-balance font-serif text-white drop-shadow-[0_12px_40px_rgba(0,0,0,0.85)]"
-              >
-                Completetly free AI
-                <br />
-                creation studio.
-              </motion.h1>
-
-            <motion.p
-              variants={fadeIn}
-              className="body-lg mx-auto max-w-2xl text-sm sm:text-base text-gray-300"
-            >
-              Generate cinematic video, images, and upscaled media in one place. Built on Seedance
-              Lite and more – completely free to use, no sign-up required.
-            </motion.p>
-
-              <motion.div
-                variants={fadeIn}
-                className="flex flex-wrap items-center justify-center gap-4 pt-2"
-              >
-                <Link
-                  href="/studio/video"
-                  className="pill-primary"
-                >
-                  Start Free Now
-                </Link>
-                <Link
-                  href="/studio/video"
-                  className="pill-outline"
-                >
-                  Explore AI Video
-                </Link>
-              </motion.div>
-
-              <motion.div
-                variants={fadeIn}
-                className="flex flex-wrap items-center justify-center gap-3 pt-6 text-[11px]"
-              >
-                <span className="rounded-full bg-black/50 px-3 py-1 text-white/55">
-                  Powered by
-                </span>
-                <span className="rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-white/80">
-                  Seedance Lite
-                </span>
-                <span className="rounded-full border border-white/10 bg-black/40 px-4 py-1.5 text-white/60">
-                  More models coming soon
-                </span>
-              </motion.div>
-            </motion.div>
-          </div>
+      <div className="page-container relative z-10 pb-20 pt-32">
+        {/* Hero Section */}
+        <div className="mb-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mb-6 inline-flex items-center rounded-full border border-black/5 bg-white/50 px-4 py-1.5 backdrop-blur-md">
+              <Sparkles className="mr-2 h-4 w-4 text-[#007AFF]" />
+              <span className="text-sm font-medium text-black/70">
+                Next-Gen AI Creative Studio
+              </span>
+            </div>
+            <h1 className="mb-8 text-6xl font-bold tracking-tight text-[#1d1d1f] sm:text-8xl">
+              Unleash Your <br />
+              <span className="bg-gradient-to-r from-[#007AFF] to-[#5856D6] bg-clip-text text-transparent">
+                Creative Potential
+              </span>
+            </h1>
+            <p className="mx-auto mb-10 max-w-2xl text-lg text-black/60">
+              Create stunning videos, music, and art with our professional AI tools.
+              Free, unlimited, and designed for creators.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Link href="/studio/video">
+                <Button size="lg" className="px-8 py-4 text-lg rounded-full bg-[#007AFF] hover:bg-[#0066CC] text-white">
+                  Start Creating <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/about">
+                <Button variant="secondary" size="lg" className="px-8 py-4 text-lg rounded-full border border-black/5 bg-white/50 text-[#1d1d1f] hover:bg-white/80">
+                  Learn More
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
 
-        {/* bottom fade into content */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#050508] via-[#050508] to-transparent" />
-      </section>
+        {/* Showcase Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mb-24"
+        >
+          <GlassCard className="relative h-[400px] w-full overflow-hidden flex items-center justify-center bg-white/40">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 pointer-events-none" />
 
-      {/* TOOLS */}
-      <section className="relative bg-[#050508] py-20 sm:py-24">
-        <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-64 max-w-xl rounded-full bg-[#4c1d95]/40 blur-[120px]" />
-        <div className="relative page-container">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={stagger}
-            className="mb-12 text-center"
-          >
-            <motion.h2 variants={fadeIn} className="headline-lg mb-3 font-serif text-white">
-              Your complete AI media studio.
-            </motion.h2>
-            <motion.p
-              variants={fadeIn}
-              className="body-lg mx-auto max-w-2xl text-sm sm:text-base text-[#b0b0b0]"
+            <div className="relative grid grid-cols-3 gap-6 p-8 w-full max-w-5xl opacity-90 scale-95 hover:scale-100 transition-transform duration-700">
+              {/* Mock UI Elements - Dashboard Collage */}
+              <div className="col-span-2 h-72 rounded-2xl bg-white/60 border border-white/40 shadow-2xl backdrop-blur-xl p-6 flex flex-col gap-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-3 w-3 rounded-full bg-red-400/80" />
+                  <div className="h-3 w-3 rounded-full bg-amber-400/80" />
+                  <div className="h-3 w-3 rounded-full bg-green-400/80" />
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-1/4 space-y-3">
+                    <div className="h-8 rounded-lg bg-black/5" />
+                    <div className="h-4 w-2/3 rounded bg-black/5" />
+                    <div className="h-4 w-1/2 rounded bg-black/5" />
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div className="h-32 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-black/5" />
+                    <div className="h-4 w-full rounded bg-black/5" />
+                    <div className="h-4 w-3/4 rounded bg-black/5" />
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-1 h-72 rounded-2xl bg-white/60 border border-white/40 shadow-2xl backdrop-blur-xl p-6 flex flex-col gap-4">
+                <div className="aspect-square rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-black/5 flex items-center justify-center">
+                  <Sparkles className="w-12 h-12 text-teal-500/40" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-full rounded bg-black/5" />
+                  <div className="h-4 w-2/3 rounded bg-black/5" />
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute bottom-6 text-center">
+              <p className="text-xs font-semibold text-black/30 uppercase tracking-[0.2em]">Interactive Studio Preview</p>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Tools Grid (Bento Grid) */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {tools.map((tool, index) => (
+            <motion.div
+              key={tool.href}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 + (index * 0.1) }}
+              className={tool.span}
             >
-              Three focused tools for creators who care about images, motion, and detail – all in one
-              place.
-            </motion.p>
-          </motion.div>
+              <Link
+                href={tool.href}
+                className={cn('group block h-full')}
+              >
+                <GlassCard className="relative h-full overflow-hidden p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <div className={cn(
+                    "absolute -right-10 -top-10 h-64 w-64 rounded-full bg-gradient-to-br opacity-20 blur-3xl transition-opacity duration-500 group-hover:opacity-30",
+                    tool.gradient
+                  )} />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
-            {tools.map((tool, index) => {
-              const Icon = tool.icon;
-              return (
-                <motion.div
-                  key={tool.title}
-                  initial={{ opacity: 0, y: 26 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{
-                    duration: 0.55,
-                    delay: index * 0.08,
-                    ease: 'easeOut',
-                  }}
-                  className={index === 0 ? 'lg:col-span-2' : ''}
-                >
-                  <Link href={tool.href} className="group block h-full">
-                    <div className="shell-card flex h-full flex-col overflow-hidden p-7">
-                      <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#a855f7] to-[#7c3aed] text-white shadow-[0_0_30px_rgba(124,58,237,0.7)] group-hover:scale-105 transition-transform">
-                        <Icon className="h-7 w-7" />
+                  <div className="relative z-10 flex h-full flex-col justify-between">
+                    <div>
+                      <div className="mb-5 flex justify-start bg-transparent p-0">
+                        <tool.icon className="h-20 w-20 text-[#1d1d1f] stroke-[1.5] transition-transform duration-300 group-hover:scale-110" />
                       </div>
-                      <h3 className="mb-2 text-lg font-semibold text-white">
+                      <h3 className="mb-2 text-xl font-bold text-[#1d1d1f]">
                         {tool.title}
                       </h3>
-                      <p className="mb-5 flex-1 text-sm text-[#b0b0b0]">
+                      <p className="text-sm text-black/60">
                         {tool.description}
                       </p>
-                      <span className="flex items-center text-sm font-medium text-[#c4b5fd] group-hover:gap-2 transition-all">
-                        Open studio
-                        <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </span>
                     </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
+
+                    <div className="mt-6 flex items-center text-sm font-medium text-[#007AFF] opacity-0 transition-all duration-300 group-hover:translate-x-2 group-hover:opacity-100">
+                      Try Now <ArrowRight className="ml-1 h-4 w-4" />
+                    </div>
+                  </div>
+                </GlassCard>
+              </Link>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </div>
 
       {/* BENEFITS */}
-      <section className="bg-[#050508] py-20 sm:py-24">
+      <section className="page-section relative z-10 pb-32">
         <div className="page-container">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={stagger}
-            className="mb-12 text-center"
-          >
-            <motion.h2 variants={fadeIn} className="headline-lg mb-3 font-serif text-white">
-              Why creators choose Free AI Creation.
-            </motion.h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit, index) => (
               <motion.div
                 key={benefit.title}
-                initial={{ opacity: 0, y: 24 }}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.55, delay: index * 0.08 }}
-                className="rounded-3xl border border-white/10 bg-[#090911] p-7 text-center"
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#a855f7]/15">
-                  <Check className="h-6 w-6 text-[#c4b5fd]" />
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/50 text-[#007AFF] ring-1 ring-black/5">
+                  <Check className="h-8 w-8" />
                 </div>
-                <h3 className="mb-2 text-base font-semibold text-white">{benefit.title}</h3>
-                <p className="text-sm text-[#b0b0b0]">{benefit.description}</p>
+                <h3 className="mb-2 text-xl font-semibold text-[#1d1d1f]">{benefit.title}</h3>
+                <p className="text-black/50">{benefit.description}</p>
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section className="relative overflow-hidden bg-[#050508] py-24 sm:py-28">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.4]"
-          style={{
-            backgroundImage:
-              "url('https://images.pexels.com/photos/6898852/pexels-photo-6898852.jpeg?auto=compress&cs=tinysrgb&w=1920')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-[#050508]/95 to-[#050508]" />
-
-        <div className="relative mx-auto max-w-4xl px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 26 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="space-y-6 text-center"
-          >
-            <h2 className="headline-lg font-serif text-white">
-              Ready to bring your next shot to life?
-            </h2>
-            <p className="body-lg mx-auto max-w-2xl text-sm sm:text-base text-[#d0d0d0]">
-              Open the video studio, type a prompt, and see your idea turn into motion – entirely for
-              free.
-            </p>
-            <Link
-              href="/studio/video"
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#c4b5fd] via-[#a855f7] to-[#7c3aed] px-7 py-2.5 text-sm font-semibold text-white shadow-[0_0_30px_rgba(124,58,237,0.6)] transition-transform hover:-translate-y-[2px]"
-            >
-              Start Free Now
-            </Link>
-          </motion.div>
         </div>
       </section>
     </AppShell>

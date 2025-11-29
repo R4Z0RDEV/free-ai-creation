@@ -3,8 +3,7 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/Layout/AppShell";
-import { PageHero } from "@/components/Layout/PageHero";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Download, Upload, Maximize, Info } from "lucide-react";
+import { Loader2, Download, Upload, Maximize, Info, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { BeforeAfterSlider } from "@/components/ui/BeforeAfterSlider";
 import {
@@ -40,7 +39,7 @@ const getDisplayedUrl = (result: UpscaleResult | null) => {
   return result.watermarkedUrl;
 };
 
-export default function UpscaleStudio() {
+export default function UpscaleStudioPage() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [upscaleResult, setUpscaleResult] = useState<UpscaleResult | null>(null);
   const [isUpscaling, setIsUpscaling] = useState(false);
@@ -130,12 +129,12 @@ export default function UpscaleStudio() {
       setUpscaleResult((prev) =>
         prev
           ? {
-              ...prev,
-              hasUnlockedClean: true,
-            }
+            ...prev,
+            hasUnlockedClean: true,
+          }
           : prev,
       );
-      toast.success('워터마크 없는 업스케일을 사용할 수 있습니다.');
+      toast.success('Watermark removed successfully.');
     } finally {
       setIsUnlockingClean(false);
     }
@@ -145,156 +144,145 @@ export default function UpscaleStudio() {
 
   return (
     <AppShell>
-      <PageHero
-        eyebrow="AI UPSCALING"
-        title="Enhance your images in one click."
-        description="Sharpen details, remove blur, and upscale your images with AI — perfect for thumbnails, product shots, and social posts."
-      >
-        <p className="mt-3 text-xs text-white/60">
-          Upscale model: Real-ESRGAN on Replicate
-        </p>
-      </PageHero>
+      <div className="page-container pb-20 pt-32">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12 text-center"
+        >
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/50 text-[#007AFF] ring-1 ring-black/5 shadow-sm backdrop-blur-md">
+            <Maximize className="h-8 w-8" />
+          </div>
+          <h1 className="mb-4 text-4xl font-bold tracking-tight text-[#1d1d1f] sm:text-5xl">
+            AI Image Upscaler
+          </h1>
+          <p className="mx-auto max-w-2xl text-lg text-black/60">
+            Enhance resolution, sharpen details, and remove noise with advanced AI upscaling.
+          </p>
+        </motion.div>
 
-      <section className="relative py-10 lg:py-12">
-        <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-64 max-w-3xl -translate-y-24 rounded-full section-glow bg-[radial-gradient(circle,_rgba(196,181,253,0.4),transparent_65%)]" />
-
-        <div className="page-container relative grid grid-cols-1 gap-8 lg:grid-cols-12">
-          {/* 왼쪽 설정 패널 */}
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Controls Panel */}
           <motion.div
-            initial={{ opacity: 0, x: -18 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-3"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-4 space-y-6"
           >
-            <Card className="panel p-6 space-y-6">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                  Upload
-                </Label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  className="w-full justify-center rounded-2xl border-white/15 bg-white/5 text-sm font-medium text-white hover:bg-white/10"
-                  disabled={isUpscaling}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Choose Image
-                </Button>
-              </div>
-
-              <TooltipProvider>
-                <div className="space-y-4 rounded-2xl border border-white/10 bg-black/40 p-4">
-              <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                  Scale
-                </Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="text-white/40 hover:text-white/80"
-                          >
-                            <Info className="h-3.5 w-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs text-xs">
-                          이미지를 몇 배로 키울지 선택합니다. 값이 클수록 해상도가
-                          높아지지만 처리 시간이 늘어납니다.
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                <Select
-                      value={String(scale)}
-                      onValueChange={(value) => setScale(Number(value))}
-                  disabled={isUpscaling}
-                >
-                  <SelectTrigger className="rounded-2xl bg-white/5 border-white/10 text-sm text-white">
-                    <SelectValue placeholder="Select scale" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#050508] border-white/10 text-sm text-white">
-                        {[2, 4, 6, 8, 10].map((s) => (
-                          <SelectItem key={s} value={String(s)}>
-                            {s}x
-                          </SelectItem>
-                        ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                        Face Enhance
-                      </Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="text-white/40 hover:text-white/80"
-                          >
-                            <Info className="h-3.5 w-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs text-xs">
-                          얼굴이 포함된 이미지에서 얼굴 디테일을 추가로 보정합니다.
-                          인물 사진에 유용하지만, 모든 이미지에 필요하지는
-                          않습니다.
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFaceEnhance((prev) => !prev)}
-                      className={cn(
-                        "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium",
-                        faceEnhance
-                          ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-100"
-                          : "border-white/20 bg-white/5 text-white/70",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "h-3 w-3 rounded-full border border-white/40",
-                          faceEnhance && "border-transparent bg-emerald-400",
-                        )}
-                      />
-                      {faceEnhance ? "On" : "Off"}
-                    </button>
-                  </div>
+            <GlassCard className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="label-glass">Upload Image</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full btn-glass h-12 border-dashed border-black/10 hover:border-[#007AFF]/50 hover:bg-[#007AFF]/5 text-black/60 hover:text-[#007AFF]"
+                    disabled={isUpscaling}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {originalImage ? "Change Image" : "Choose Image"}
+                  </Button>
                 </div>
-              </TooltipProvider>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                  Mode
-                </Label>
-                <Select
-                  value={mode}
-                  onValueChange={setMode}
-                  disabled={isUpscaling}
-                >
-                  <SelectTrigger className="rounded-2xl bg-white/5 border-white/10 text-sm text-white">
-                    <SelectValue placeholder="Select mode" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#050508] border-white/10 text-sm text-white">
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="high-detail">High Detail</SelectItem>
-                  </SelectContent>
-                </Select>
+                <TooltipProvider>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="label-glass">Scale Factor</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-black/40 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Higher values increase resolution but take longer.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Select
+                        value={String(scale)}
+                        onValueChange={(value) => setScale(Number(value))}
+                        disabled={isUpscaling}
+                      >
+                        <SelectTrigger className="input-glass">
+                          <SelectValue placeholder="Select scale" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[2, 4, 6, 8, 10].map((s) => (
+                            <SelectItem key={s} value={String(s)}>
+                              {s}x Upscale
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="label-glass">Face Enhance</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-black/40 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Enhances facial details. Recommended for portraits.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFaceEnhance((prev) => !prev)}
+                        className={cn(
+                          "w-full flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition-all",
+                          faceEnhance
+                            ? "border-[#007AFF]/50 bg-[#007AFF]/10 text-[#007AFF]"
+                            : "border-black/5 bg-white/40 text-black/60 hover:bg-white/60"
+                        )}
+                      >
+                        <span>Enhance Faces</span>
+                        <div className={cn(
+                          "h-5 w-9 rounded-full p-0.5 transition-colors",
+                          faceEnhance ? "bg-[#007AFF]" : "bg-black/10"
+                        )}>
+                          <div className={cn(
+                            "h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+                            faceEnhance ? "translate-x-4" : "translate-x-0"
+                          )} />
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="label-glass">Mode</Label>
+                      <Select
+                        value={mode}
+                        onValueChange={setMode}
+                        disabled={isUpscaling}
+                      >
+                        <SelectTrigger className="input-glass">
+                          <SelectValue placeholder="Select mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="high-detail">High Detail</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </TooltipProvider>
               </div>
 
               <Button
                 onClick={handleUpscale}
                 disabled={isUpscaling || !originalImage}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#c4b5fd] via-[#a855f7] to-[#6366f1] text-sm font-semibold text-white shadow-[0_0_40px_rgba(148,163,255,0.4)] hover:brightness-110 transition"
+                className="w-full btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC] border-transparent shadow-lg hover:shadow-xl h-12"
               >
                 {isUpscaling ? (
                   <>
@@ -303,78 +291,78 @@ export default function UpscaleStudio() {
                   </>
                 ) : (
                   <>
-                    <Maximize className="w-4 h-4 mr-2" />
+                    <Zap className="w-4 h-4 mr-2 fill-current" />
                     Upscale Image
                   </>
                 )}
               </Button>
 
               {upscaledImage && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3 pt-2">
                   <Button
                     onClick={handleDownload}
                     variant="outline"
-                    className="w-full rounded-2xl border-white/15 bg-white/[0.02] text-sm text-white hover:bg-white/10"
+                    className="w-full btn-glass h-10"
                     disabled={isUpscaling}
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download Upscaled
+                    Download Result
                   </Button>
                   {upscaleResult?.cleanUrl && !upscaleResult.hasUnlockedClean && (
                     <Button
                       onClick={handleUnlockClean}
                       variant="ghost"
                       disabled={isUnlockingClean}
-                      className="w-full rounded-2xl border border-purple-500/40 bg-purple-500/5 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 hover:bg-purple-500/15 disabled:opacity-50"
+                      className="w-full rounded-xl border border-[#007AFF]/20 bg-[#007AFF]/5 text-[10px] font-bold uppercase tracking-widest text-[#007AFF] hover:bg-[#007AFF]/10 disabled:opacity-50 h-9"
                     >
-                      {isUnlockingClean ? "광고 시청 중..." : "광고 보고 워터마크 제거"}
+                      {isUnlockingClean ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Unlocking...
+                        </>
+                      ) : (
+                        "Remove Watermark"
+                      )}
                     </Button>
                   )}
                 </div>
               )}
-
-              <div className="pt-2 border-t border-white/5 text-[11px] text-[#8b8b8b] leading-relaxed">
-                <p>
-                  • We don&apos;t store your images — all processing is done per
-                  request.
-                </p>
-                <p>• Best results with clear subjects and good lighting.</p>
-              </div>
-            </Card>
+            </GlassCard>
           </motion.div>
 
-          {/* 오른쪽: 비교 패널 */}
+          {/* Preview Panel */}
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="lg:col-span-9"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
               {/* Original */}
-              <Card className="panel flex flex-col p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold tracking-[0.16em] text-white/70 uppercase">
+              <GlassCard className="flex flex-col p-1 h-full min-h-[500px]">
+                <div className="px-5 py-4 flex items-center justify-between border-b border-black/5 bg-white/40">
+                  <h2 className="text-xs font-bold tracking-[0.2em] text-black/70 uppercase flex items-center gap-2">
+                    <Upload className="w-3.5 h-3.5" />
                     Original
                   </h2>
                   {originalImage && (
-                    <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-[#aaaaaa]">
+                    <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-medium text-black/60 border border-black/5">
                       Source
                     </span>
                   )}
                 </div>
-                <div className="relative flex-1 rounded-2xl bg-black/40 min-h-[360px] flex items-center justify-center overflow-hidden">
+                <div className="relative flex-1 bg-black/5 flex items-center justify-center overflow-hidden rounded-b-3xl">
                   {!originalImage ? (
-                    <div className="text-center space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#c4b5fd]/25 to-[#6366f1]/25 flex items-center justify-center">
-                        <Upload className="w-10 h-10 text-[#c4b5fd]" />
+                    <div className="text-center space-y-4 p-8">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-white/50 border border-white/60 flex items-center justify-center shadow-sm">
+                        <Upload className="w-8 h-8 text-black/20" />
                       </div>
                       <div>
-                        <p className="text-gray-200 text-base font-medium">
+                        <p className="text-black/60 text-sm font-medium">
                           No image uploaded
                         </p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          Click &quot;Choose Image&quot; to get started
+                        <p className="text-black/40 text-xs mt-1">
+                          Upload an image to start upscaling
                         </p>
                       </div>
                     </div>
@@ -382,36 +370,37 @@ export default function UpscaleStudio() {
                     <img
                       src={originalImage}
                       alt="Original"
-                      className="max-w-full max-h-full object-contain rounded-xl"
+                      className="max-w-full max-h-full object-contain"
                     />
                   )}
                 </div>
-              </Card>
+              </GlassCard>
 
               {/* Upscaled */}
-              <Card className="panel flex flex-col p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold tracking-[0.16em] text-white/70 uppercase">
-                    Upscaled
+              <GlassCard className="flex flex-col p-1 h-full min-h-[500px] ring-1 ring-[#007AFF]/20 shadow-lg shadow-[#007AFF]/5">
+                <div className="px-5 py-4 flex items-center justify-between border-b border-black/5 bg-white/40">
+                  <h2 className="text-xs font-bold tracking-[0.2em] text-[#007AFF] uppercase flex items-center gap-2">
+                    <Maximize className="w-3.5 h-3.5" />
+                    Upscaled Result
                   </h2>
                   {upscaledImage && (
-                    <span className="rounded-full bg-[#22c55e]/10 px-3 py-1 text-xs text-[#4ade80]">
-                      Enhanced
+                    <span className="rounded-full bg-[#007AFF]/10 px-2 py-0.5 text-[10px] font-medium text-[#007AFF] border border-[#007AFF]/20">
+                      {scale}x Enhanced
                     </span>
                   )}
                 </div>
-                <div className="relative flex-1 rounded-2xl bg-black/40 min-h-[360px] flex items-center justify-center overflow-hidden">
+                <div className="relative flex-1 bg-black/5 flex items-center justify-center overflow-hidden rounded-b-3xl">
                   {!upscaledImage && !isUpscaling && (
-                    <div className="text-center space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#c4b5fd]/25 to-[#6366f1]/25 flex items-center justify-center">
-                        <Maximize className="w-10 h-10 text-[#c4b5fd]" />
+                    <div className="text-center space-y-4 p-8">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-[#007AFF]/5 border border-[#007AFF]/10 flex items-center justify-center">
+                        <Sparkles className="w-8 h-8 text-[#007AFF]/40" />
                       </div>
                       <div>
-                        <p className="text-gray-200 text-base font-medium">
-                          No upscaled image yet
+                        <p className="text-black/60 text-sm font-medium">
+                          Ready to enhance
                         </p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          Choose settings and click &quot;Upscale Image&quot;
+                        <p className="text-black/40 text-xs mt-1">
+                          Configure settings and click Upscale
                         </p>
                       </div>
                     </div>
@@ -419,9 +408,12 @@ export default function UpscaleStudio() {
 
                   {isUpscaling && (
                     <div className="text-center space-y-4">
-                      <Loader2 className="w-12 h-12 text-[#c4b5fd] animate-spin mx-auto" />
-                      <p className="text-gray-300 text-sm">
-                        Upscaling your image with AI...
+                      <div className="relative mx-auto h-16 w-16">
+                        <div className="absolute inset-0 rounded-full border-2 border-[#007AFF]/10" />
+                        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#007AFF] animate-spin" />
+                      </div>
+                      <p className="text-[#007AFF] text-sm font-medium animate-pulse">
+                        Enhancing details...
                       </p>
                     </div>
                   )}
@@ -431,7 +423,7 @@ export default function UpscaleStudio() {
                       beforeSrc={originalImage}
                       afterSrc={upscaledImage}
                       alt="Upscaled comparison"
-                      className="h-[400px] w-full"
+                      className="h-full w-full absolute inset-0"
                     />
                   )}
 
@@ -439,15 +431,15 @@ export default function UpscaleStudio() {
                     <img
                       src={upscaledImage}
                       alt="Upscaled"
-                      className="max-w-full max-h-full object-contain rounded-xl"
+                      className="max-w-full max-h-full object-contain"
                     />
                   )}
                 </div>
-              </Card>
+              </GlassCard>
             </div>
           </motion.div>
         </div>
-      </section>
+      </div>
     </AppShell>
   );
 }

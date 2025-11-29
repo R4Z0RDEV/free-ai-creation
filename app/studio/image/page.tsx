@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/Layout/AppShell";
-import { PageHero } from "@/components/Layout/PageHero";
-import { Card } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -15,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Download, Image as ImageIcon, Info } from "lucide-react";
+import { Loader2, Download, Image as ImageIcon, Info, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -41,7 +40,7 @@ const getBaseUrl = () =>
     ? window.location.origin
     : 'https://free-ai-creation.com');
 
-export default function ImageStudio() {
+export default function ImageStudioPage() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [resolution, setResolution] = useState('1024x1024');
@@ -66,6 +65,33 @@ export default function ImageStudio() {
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [unlockingImageId, setUnlockingImageId] = useState<string | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+
+  const handleEnhancePrompt = async () => {
+    if (!prompt.trim()) return;
+
+    setIsEnhancing(true);
+    try {
+      const response = await fetch('/api/enhance-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) throw new Error('Failed to enhance prompt');
+
+      const data = await response.json();
+      if (data.enhancedPrompt) {
+        setPrompt(data.enhancedPrompt);
+        toast.success('Prompt enhanced!');
+      }
+    } catch (error) {
+      console.error('Enhancement error:', error);
+      toast.error('Failed to enhance prompt');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   const getDisplayedUrl = (image?: GeneratedImage) => {
     if (!image) return '';
@@ -156,10 +182,10 @@ export default function ImageStudio() {
         prev.map((image) =>
           image.id === currentImage.id
             ? {
-                ...image,
-                hasUnlockedClean: true,
-                cleanUrl: image.cleanUrl ?? image.originalUrl,
-              }
+              ...image,
+              hasUnlockedClean: true,
+              cleanUrl: image.cleanUrl ?? image.originalUrl,
+            }
             : image,
         ),
       );
@@ -170,583 +196,308 @@ export default function ImageStudio() {
 
   return (
     <AppShell>
-      <PageHero
-        eyebrow="AI IMAGE STUDIO"
-        title="Create images with Free AI Creation."
-        description="Generate high-quality images in different styles — photoreal, illustration, anime and more. Completely free and ad-supported, no login required."
-          >
-        <p className="mt-3 text-xs text-white/60">
-          Image model: Stable Diffusion on Replicate
-        </p>
-      </PageHero>
+      <div className="page-container pb-20 pt-32">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12 text-center"
+        >
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/50 text-[#007AFF] ring-1 ring-black/5 shadow-sm backdrop-blur-md">
+            <Sparkles className="h-8 w-8" />
+          </div>
+          <h1 className="mb-4 text-4xl font-bold tracking-tight text-[#1d1d1f] sm:text-5xl">
+            AI Image Studio
+          </h1>
+          <p className="mx-auto max-w-2xl text-lg text-black/60">
+            Create stunning visuals with professional-grade AI models.
+          </p>
+        </motion.div>
 
-      <section className="relative py-10 lg:py-12">
-        <div className="pointer-events-none absolute inset-x-0 -top-32 mx-auto h-72 max-w-4xl section-glow bg-[radial-gradient(circle_at_top,_rgba(168,85,247,0.22),transparent_65%)]" />
-        <div className="page-container relative space-y-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1.2fr)_minmax(0,260px)]">
-            {/* 왼쪽 – 프롬프트 / 옵션 */}
-            <motion.div
-              initial={{ opacity: 0, x: -18 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-            >
-              <Card className="panel p-6 space-y-6">
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Left Panel - Controls */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-4 space-y-6"
+          >
+            <GlassCard className="p-6 space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[11px] font-semibold tracking-[0.25em] text-slate-300 uppercase">
-                    Prompt
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="label-glass">Prompt</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEnhancePrompt}
+                      disabled={isEnhancing || !prompt.trim()}
+                      className="h-6 px-2 text-xs text-[#007AFF] hover:text-[#0066CC] hover:bg-[#007AFF]/10"
+                    >
+                      {isEnhancing ? (
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-1 h-3 w-3" />
+                      )}
+                      Enhance
+                    </Button>
+                  </div>
                   <Textarea
+                    placeholder="Describe your imagination..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe the image you want to generate..."
-                    className="min-h-[140px] resize-none border border-white/5 bg-black/40 text-sm text-white placeholder:text-slate-500"
-                    disabled={isGenerating}
+                    className="input-glass min-h-[120px] resize-none text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[11px] font-semibold tracking-[0.25em] text-slate-300 uppercase">
-                    Resolution
-                  </Label>
-                  <Select
-                    value={resolution}
-                    onValueChange={(value) => {
-                      setResolution(value);
-                      const preset = resolutionPresets[value];
-                      if (preset) {
-                        setWidth(preset.width);
-                        setHeight(preset.height);
-                      }
-                    }}
-                    disabled={isGenerating}
-                  >
-                    <SelectTrigger className="h-9 border border-white/5 bg-black/40 text-xs text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-40 rounded-2xl border border-white/10 bg-black/95 px-1 py-1 text-xs text-white shadow-xl">
-                      <SelectItem value="512x512">512 × 512</SelectItem>
-                      <SelectItem value="768x768">768 × 768</SelectItem>
-                      <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="label-glass">Negative Prompt</Label>
+                  <Textarea
+                    placeholder="What to exclude (e.g. blur, distortion)"
+                    value={negativePrompt}
+                    onChange={(e) => setNegativePrompt(e.target.value)}
+                    className="input-glass min-h-[80px] resize-none text-sm"
+                  />
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-[11px] font-semibold tracking-[0.25em] text-slate-300 uppercase">
-                    Style
-                  </Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="label-glass">Style</Label>
+                    <Select value={style} onValueChange={setStyle}>
+                      <SelectTrigger className="input-glass">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="photo">Photorealistic</SelectItem>
+                        <SelectItem value="anime">Anime</SelectItem>
+                        <SelectItem value="digital-art">Digital Art</SelectItem>
+                        <SelectItem value="oil-painting">Oil Painting</SelectItem>
+                        <SelectItem value="cinematic">Cinematic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                  {/* 2×2 스타일 셀렉터 – 업스케일 UI랑 느낌 맞추기 */}
-                  <div className="grid grid-cols-2 gap-2 text-sm font-medium">
-                    {[
-                      { id: 'photo', label: 'Photo' },
-                      { id: 'illustration', label: 'Illustration' },
-                      { id: 'anime', label: 'Anime' },
-                      { id: 'painting', label: 'Painting' },
-                    ].map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => setStyle(option.id)}
-                        disabled={isGenerating}
-                        className={`h-10 rounded-full border text-xs transition-all ${
-                          style === option.id
-                            ? 'border-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-[0_0_22px_rgba(139,92,246,0.8)]'
-                            : 'border-white/10 bg-white/5 text-slate-200 hover:border-violet-400/70'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <Label className="label-glass">Resolution</Label>
+                    <Select
+                      value={resolution}
+                      onValueChange={(val) => {
+                        setResolution(val);
+                        const preset = resolutionPresets[val];
+                        if (preset) {
+                          setWidth(preset.width);
+                          setHeight(preset.height);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="input-glass">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1024x1024">Square (1:1)</SelectItem>
+                        <SelectItem value="768x768">Portrait (3:4)</SelectItem>
+                        <SelectItem value="512x512">Landscape (4:3)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !prompt.trim()}
-                  className="mt-2 w-full rounded-full bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-sm font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.8)] hover:shadow-[0_0_40px_rgba(139,92,246,1)]"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating…
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="w-4 h-4 mr-2" />
-                      Generate Image
-                    </>
-                  )}
-                </Button>
-
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Completely free to use · Ad-supported · No login required
-                </p>
-
                 <TooltipProvider>
-                  <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
-                      Advanced settings
-                    </p>
-
-                    {/* Seed */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                          Seed
-                        </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            랜덤 시드입니다. 같은 시드를 사용하면 비슷한 이미지를
-                            다시 생성할 수 있습니다. 비워 두면 매번 다른 결과가
-                            나옵니다.
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <input
-                        type="number"
-                        placeholder="Random"
-                        value={seed}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '') {
-                            setSeed('');
-                            return;
-                          }
-                          const parsed = Number(value);
-                          if (!Number.isNaN(parsed)) setSeed(parsed);
-                        }}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-white/40 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Width / Height */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                            Width
-                          </Label>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                className="text-white/40 hover:text-white/80"
-                              >
-                                <Info className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs text-xs">
-                              생성 이미지의 가로 픽셀 수입니다. 64의 배수여야
-                              합니다. 값이 클수록 더 선명하지만 느려집니다.
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                        <input
-                          type="number"
-                          min={512}
-                          max={1536}
-                          step={64}
-                          value={width}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '') {
-                              setWidth('');
-                              return;
-                            }
-                            const parsed = Number(value);
-                            if (!Number.isNaN(parsed)) setWidth(parsed);
-                          }}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white focus:border-white/40 focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                            Height
-                          </Label>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                className="text-white/40 hover:text-white/80"
-                              >
-                                <Info className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs text-xs">
-                              생성 이미지의 세로 픽셀 수입니다. 64의 배수여야
-                              합니다.
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                        <input
-                          type="number"
-                          min={512}
-                          max={1536}
-                          step={64}
-                          value={height}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '') {
-                              setHeight('');
-                              return;
-                            }
-                            const parsed = Number(value);
-                            if (!Number.isNaN(parsed)) setHeight(parsed);
-                          }}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white focus:border-white/40 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Scheduler */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                          Scheduler
-                        </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            샘플링 방식입니다. 보통 기본값이면 충분하지만, 다른
-                            스케줄러를 선택하면 이미지 느낌이 약간 달라질 수
-                            있습니다.
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <Select
-                        value={scheduler}
-                        onValueChange={setScheduler}
-                        disabled={isGenerating}
-                      >
-                        <SelectTrigger className="mt-1 h-8 border border-white/10 bg-white/[0.03] text-xs text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="DPMSolverMultistep">
-                            DPMSolverMultistep
-                          </SelectItem>
-                          <SelectItem value="K_EULER">K_EULER</SelectItem>
-                          <SelectItem value="K_EULER_ANCESTRAL">
-                            K_EULER_ANCESTRAL
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Num outputs */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                          Number of Outputs
-                        </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            한 번에 생성할 이미지 개수입니다. 여러 장을 생성하면
-                            비용과 시간이 늘어납니다.
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <input
-                        type="number"
-                        min={1}
-                        max={4}
-                        value={numOutputs}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '') {
-                            setNumOutputs('');
-                            return;
-                          }
-                          const parsed = Number(value);
-                          if (!Number.isNaN(parsed)) setNumOutputs(parsed);
-                        }}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white focus:border-white/40 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Guidance scale */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                  <div className="space-y-4 pt-4 border-t border-black/5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="label-glass flex items-center gap-2">
                           Guidance Scale
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-3 w-3 text-black/40" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>How closely to follow the prompt</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            프롬프트를 얼마나 강하게 따를지 조절합니다. 값이
-                            높을수록 프롬프트에 맞지만, 너무 높으면 어색한 결과가
-                            나올 수 있습니다.
-                          </TooltipContent>
-                        </Tooltip>
+                        <span className="text-xs text-[#007AFF] font-medium">{guidanceScale}</span>
                       </div>
                       <input
-                        type="number"
-                        step={0.5}
-                        min={1}
-                        max={20}
+                        type="range"
+                        min="1"
+                        max="20"
+                        step="0.5"
                         value={guidanceScale}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '') {
-                            setGuidanceScale('');
-                            return;
-                          }
-                          const parsed = Number(value);
-                          if (!Number.isNaN(parsed)) setGuidanceScale(parsed);
-                        }}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white focus:border-white/40 focus:outline-none"
+                        onChange={(e) => setGuidanceScale(Number(e.target.value))}
+                        className="w-full h-1.5 bg-black/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#007AFF]"
                       />
                     </div>
 
-                    {/* Steps */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="label-glass flex items-center gap-2">
                           Steps
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-3 w-3 text-black/40" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>More steps = higher quality but slower</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            디노이징 반복 횟수입니다. 값이 높을수록 디테일이
-                            좋아지지만 생성 시간이 증가합니다.
-                          </TooltipContent>
-                        </Tooltip>
+                        <span className="text-xs text-[#007AFF] font-medium">{numInferenceSteps}</span>
                       </div>
                       <input
-                        type="number"
-                        min={10}
-                        max={500}
+                        type="range"
+                        min="20"
+                        max="100"
+                        step="1"
                         value={numInferenceSteps}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '') {
-                            setNumInferenceSteps('');
-                            return;
-                          }
-                          const parsed = Number(value);
-                          if (!Number.isNaN(parsed))
-                            setNumInferenceSteps(parsed);
-                        }}
-                        className="mt-1 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white focus:border-white/40 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Negative prompt */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                          Negative Prompt
-                        </Label>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="text-white/40 hover:text-white/80"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            이미지에 나오지 않았으면 하는 요소를 작성합니다. 예:
-                            “low quality, artifacts, text, watermark”.
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <Textarea
-                        rows={3}
-                        value={negativePrompt}
-                        onChange={(e) =>
-                          setNegativePrompt(e.target.value)
-                        }
-                        className="mt-1 border-white/10 bg-white/[0.03] text-xs text-white placeholder:text-white/30 focus:border-white/40"
-                        placeholder='예: "low quality, artifacts, text, watermark"'
+                        onChange={(e) => setNumInferenceSteps(Number(e.target.value))}
+                        className="w-full h-1.5 bg-black/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#007AFF]"
                       />
                     </div>
                   </div>
                 </TooltipProvider>
-              </Card>
-            </motion.div>
 
-            {/* 가운데 – 프리뷰 */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.4 }}
-            >
-              <Card className="panel flex min-h-[420px] flex-col p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold tracking-[0.25em] text-slate-300 uppercase">
-                      Preview
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Latest generated image appears here.
-                    </p>
-                  </div>
-                  {currentImage && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={handleDownloadWithGate}
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full border-white/20 bg-white/5 text-xs text-slate-100 hover:bg-white/10"
-                        title="물방울 없이 다운로드하려면 광고 후 제공되는 원본을 받아보세요."
-                      >
-                        <Download className="w-4 h-4 mr-1.5" />
-                        Download
-                      </Button>
-                      {currentImage.cleanUrl && !currentImage.hasUnlockedClean && (
-                        <Button
-                          onClick={handleUnlockWatermark}
-                          size="sm"
-                          variant="ghost"
-                          disabled={unlockingImageId === currentImage.id}
-                          className="rounded-full border border-purple-500/40 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-purple-100 hover:bg-purple-500/10 disabled:opacity-50"
-                        >
-                          {unlockingImageId === currentImage.id
-                            ? "광고 시청 중..."
-                            : "광고 보고 워터마크 제거"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-1 items-center justify-center rounded-2xl bg-black/40">
-                  {!currentImage && !isGenerating && (
-                    <div className="space-y-4 text-center">
-                      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/25 to-fuchsia-500/25">
-                        <ImageIcon className="h-10 w-10 text-violet-300" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-200">
-                          No image generated yet
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Enter a prompt on the left and click
-                          <span className="ml-1 font-medium text-violet-300">
-                            Generate Image
-                          </span>
-                          .
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {isGenerating && (
-                    <div className="space-y-4 text-center">
-                      <Loader2 className="mx-auto h-12 w-12 animate-spin text-violet-300" />
-                      <p className="text-sm text-slate-200">
-                        Generating your image…
-                      </p>
-                    </div>
-                  )}
-
-                  {currentImage && !isGenerating && (
-                    <WatermarkedPreview hasWatermark={false}>
-                      <img
-                        src={displayedCurrentUrl}
-                        alt="Generated"
-                        className="max-h-[340px] max-w-full w-full object-contain"
-                      />
-                    </WatermarkedPreview>
-                  )}
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* 오른쪽 – 히스토리 */}
-            <motion.div
-              initial={{ opacity: 0, x: 18 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-            >
-              <Card className="panel h-full p-6">
-                <div className="mb-4">
-                  <p className="text-[11px] font-semibold tracking-[0.25em] text-slate-300 uppercase">
-                    History
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Click a thumbnail to bring it back to preview.
-                  </p>
-                </div>
-
-                <div className="space-y-3 overflow-y-auto pr-1 max-h-[420px]">
-                  {history.length === 0 ? (
-                    <p className="py-10 text-center text-xs text-slate-500">
-                      No history yet. Generated images will appear here.
-                    </p>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="w-full btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC] border-transparent shadow-lg hover:shadow-xl h-12 mt-4"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
                   ) : (
-                    history.map((item) => {
-                      const displayedHistoryUrl = getDisplayedUrl(item);
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setSelectedImageId(item.id)}
-                          className="group w-full text-left"
-                        >
-                          <WatermarkedPreview hasWatermark={false}>
-                            <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-white/8 bg-black/40 group-hover:border-violet-400/70 transition-colors">
-                              <img
-                                src={displayedHistoryUrl}
-                                alt={item.prompt}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          </WatermarkedPreview>
-                          <p className="mt-1 line-clamp-2 text-[11px] text-slate-400 group-hover:text-slate-200">
-                            {item.prompt}
-                          </p>
-                        </button>
-                      );
-                    })
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Image
+                    </>
                   )}
+                </Button>
+              </div>
+            </GlassCard>
+          </motion.div>
+
+          {/* Center Panel - Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="lg:col-span-5"
+          >
+            <GlassCard className="flex min-h-[600px] flex-col p-6 h-full">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1d1d1f]">Preview</h3>
                 </div>
-              </Card>
-            </motion.div>
-          </div>
+                {currentImage && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleDownloadWithGate}
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 text-xs btn-glass"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      Download
+                    </Button>
+                    {currentImage.cleanUrl && !currentImage.hasUnlockedClean && (
+                      <Button
+                        onClick={handleUnlockWatermark}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs text-[#007AFF] hover:text-[#007AFF]/80 hover:bg-[#007AFF]/5"
+                      >
+                        {unlockingImageId === currentImage.id ? "Unlocking..." : "Remove Watermark"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-1 items-center justify-center rounded-2xl border border-black/5 bg-black/5 overflow-hidden relative group">
+                {!currentImage && !isGenerating && (
+                  <div className="text-center space-y-4">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/50 ring-1 ring-black/5 shadow-sm">
+                      <ImageIcon className="h-8 w-8 text-black/20" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-black/60">No image generated yet</p>
+                      <p className="text-xs text-black/40 mt-1">Enter a prompt and click Generate</p>
+                    </div>
+                  </div>
+                )}
+
+                {isGenerating && (
+                  <div className="text-center space-y-4">
+                    <div className="relative mx-auto h-12 w-12">
+                      <Loader2 className="h-12 w-12 animate-spin text-[#007AFF]" />
+                    </div>
+                    <p className="text-sm font-medium text-black/60 animate-pulse">Creating masterpiece...</p>
+                  </div>
+                )}
+
+                {currentImage && !isGenerating && (
+                  <WatermarkedPreview hasWatermark={false}>
+                    <img
+                      src={displayedCurrentUrl}
+                      alt="Generated"
+                      className="max-h-[550px] w-full object-contain shadow-2xl"
+                    />
+                  </WatermarkedPreview>
+                )}
+              </div>
+            </GlassCard>
+          </motion.div>
+
+          {/* Right Panel - History */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-3"
+          >
+            <GlassCard className="h-full p-6">
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-[#1d1d1f]">History</h3>
+              </div>
+
+              <div className="space-y-3 overflow-y-auto pr-2 max-h-[600px] custom-scrollbar">
+                {history.length === 0 ? (
+                  <p className="py-10 text-center text-xs text-black/30">
+                    No history yet
+                  </p>
+                ) : (
+                  history.map((item) => {
+                    const displayedHistoryUrl = getDisplayedUrl(item);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedImageId(item.id)}
+                        className={`group w-full text-left transition-all duration-200 ${selectedImageId === item.id ? 'opacity-100 scale-[1.02]' : 'opacity-60 hover:opacity-100'
+                          }`}
+                      >
+                        <div className={`aspect-square overflow-hidden rounded-xl border bg-black/5 transition-all ${selectedImageId === item.id
+                          ? 'border-[#007AFF] shadow-md ring-2 ring-[#007AFF]/20'
+                          : 'border-black/5 group-hover:border-black/10'
+                          }`}>
+                          <img
+                            src={displayedHistoryUrl}
+                            alt={item.prompt}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </GlassCard>
+          </motion.div>
         </div>
-      </section>
+      </div>
     </AppShell>
   );
 }

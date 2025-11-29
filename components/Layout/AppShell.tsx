@@ -70,11 +70,7 @@ export function AppShell({
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#050507] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 -top-48 h-80 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.5),transparent_65%)] blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(15,23,42,0.9),transparent_60%)]" />
-      </div>
+    <div className="relative min-h-screen text-[#1d1d1f]">
       <div className="relative flex min-h-screen flex-col">
         <AppHeader />
         <main className={cn('flex-1', className)}>{children}</main>

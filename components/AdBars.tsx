@@ -36,7 +36,7 @@ export function AdsLeftBar() {
 
   useEffect(() => {
     const checkVisibility = () => {
-      setIsVisible(window.innerWidth >= 1024);
+      setIsVisible(window.innerWidth >= 1536);
     };
 
     checkVisibility();
@@ -59,7 +59,7 @@ export function AdsLeftBar() {
   if (!isVisible) return null;
 
   return (
-    <div className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-r-lg">
+    <div className="hidden 2xl:block fixed left-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] rounded-r-lg">
       <div className="h-full flex items-center justify-center overflow-hidden">
         <ins
           className="adsbygoogle"
@@ -80,7 +80,7 @@ export function AdsRightBar() {
 
   useEffect(() => {
     const checkVisibility = () => {
-      setIsVisible(window.innerWidth >= 1024);
+      setIsVisible(window.innerWidth >= 1536);
     };
 
     checkVisibility();
@@ -103,7 +103,7 @@ export function AdsRightBar() {
   if (!isVisible) return null;
 
   return (
-    <div className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-l-lg">
+    <div className="hidden 2xl:block fixed right-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] rounded-l-lg">
       <div className="h-full flex items-center justify-center overflow-hidden">
         <ins
           className="adsbygoogle"

@@ -1,15 +1,21 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Bricolage_Grotesque } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import Script from 'next/script';
 import { AdblockNotice } from '@/components/ui/AdblockNotice';
+import { cn } from '@/lib/utils';
+import PageTransition from '@/components/Layout/PageTransition';
 
-const inter = Inter({ subsets: ['latin'] });
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-bricolage',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Free AI Video Studio - Generate Videos with AI',
-  description: 'Create stunning AI-generated videos using Seedance Lite and more. Free video generation service.',
+  title: 'Free AI Creative Studio',
+  description: 'Professional creative tools for everyone. Create stunning videos, music, and art.',
 };
 
 export default function RootLayout({
@@ -18,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="light">
       <head>
         <Script
           async
@@ -31,8 +37,13 @@ export default function RootLayout({
           content="ca-pub-3621018373095111"
         />
       </head>
-      <body className={inter.className}>
-        {children}
+      <body className={cn(
+        bricolage.className,
+        "antialiased tracking-tight"
+      )}>
+        <PageTransition>
+          {children}
+        </PageTransition>
         <Toaster richColors position="top-center" />
         <AdblockNotice />
       </body>

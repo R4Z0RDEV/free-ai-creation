@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Info, Play, RefreshCw, Upload } from "lucide-react";
+import { Info, Play, RefreshCw, Upload, Settings2 } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { getVideoModelConfig, VideoModelId } from "@/lib/videoModelsConfig";
 import { cn } from "@/lib/utils";
@@ -182,14 +182,14 @@ export function ClipSettings({
   const canGenerate = prompt.trim().length > 0 && !isGenerating;
 
   return (
-    <div className={cn('space-y-5', className)}>
+    <div className={cn('space-y-6', className)}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
             Clip settings
           </p>
-          <p className="text-xs text-white/40">
-            Fine-tune the content, length, and model for this clip.
+          <p className="text-xs text-white/40 mt-0.5">
+            Configure generation parameters
           </p>
         </div>
         {clip.status === 'ready' && clip.videoUrl && (
@@ -198,9 +198,9 @@ export function ClipSettings({
             disabled={!canGenerate}
             size="sm"
             variant="outline"
-            className="rounded-full border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-40"
+            className="h-8 rounded-full border-white/10 bg-white/5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white"
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
             Regenerate
           </Button>
         )}
@@ -208,10 +208,7 @@ export function ClipSettings({
 
       <div className="space-y-5">
         <div>
-          <Label
-            htmlFor={`title-${clip.id}`}
-            className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55"
-          >
+          <Label htmlFor={`title-${clip.id}`} className="label-glass">
             Title
           </Label>
           <Input
@@ -220,15 +217,12 @@ export function ClipSettings({
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleBlur}
             placeholder="Clip title..."
-            className="mt-2 border-white/10 bg-white/[0.03] text-white placeholder:text-white/30 focus:border-white/40"
+            className="input-glass mt-1.5"
           />
         </div>
 
         <div>
-          <Label
-            htmlFor={`prompt-${clip.id}`}
-            className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55"
-          >
+          <Label htmlFor={`prompt-${clip.id}`} className="label-glass">
             Prompt
           </Label>
           <Textarea
@@ -237,44 +231,47 @@ export function ClipSettings({
             onChange={(e) => setPrompt(e.target.value)}
             onBlur={handleBlur}
             placeholder="Describe what you want to see in this clip..."
-            rows={5}
-            className="mt-2 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
+            rows={4}
+            className="input-glass mt-1.5 resize-none"
           />
           {prompt.trim().length === 0 && (
-            <p className="mt-1 text-xs text-rose-300">Prompt is required.</p>
+            <p className="mt-1.5 text-xs text-rose-400">Prompt is required.</p>
           )}
         </div>
 
-          <div className="space-y-2">
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
-              Duration ({modelConfig.displayName})
-          </Label>
-            <p className="text-xs text-white/40">
-              {modelConfig.minDurationSeconds}s – {modelConfig.maxDurationSeconds}s · Current:{' '}
-              <span className="text-white/80">{duration}s</span>
-            </p>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="label-glass">
+              Duration
+            </Label>
+            <span className="text-xs font-medium text-white/60">{duration}s</span>
+          </div>
           <Slider
             value={[duration]}
-              onValueChange={(values) => {
-                const next = Math.min(
-                  modelConfig.maxDurationSeconds,
-                  Math.max(modelConfig.minDurationSeconds, values[0]),
-                );
-                setDuration(next);
-              }}
+            onValueChange={(values) => {
+              const next = Math.min(
+                modelConfig.maxDurationSeconds,
+                Math.max(modelConfig.minDurationSeconds, values[0]),
+              );
+              setDuration(next);
+            }}
             onValueCommit={handleBlur}
             min={modelConfig.minDurationSeconds}
             max={modelConfig.maxDurationSeconds}
             step={1}
-              className="mt-3"
-            />
+            className="py-2"
+          />
+          <div className="flex justify-between text-[10px] text-white/30 font-medium uppercase tracking-wider">
+            <span>{modelConfig.minDurationSeconds}s</span>
+            <span>{modelConfig.maxDurationSeconds}s</span>
           </div>
+        </div>
 
-        <div className="space-y-3">
-          <Label className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
+        <div className="space-y-2">
+          <Label className="label-glass">
             Resolution
           </Label>
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1">
             <button
               type="button"
               onClick={() => {
@@ -283,8 +280,8 @@ export function ClipSettings({
               }}
               disabled={isGenerating}
               className={cn(
-                'h-10 rounded-full border px-4 text-xs font-semibold uppercase tracking-[0.2em]',
-                'border-transparent bg-gradient-to-r from-[#c4b5fd] via-[#a855f7] to-[#7c3aed] text-white shadow-[0_0_22px_rgba(124,58,237,0.55)]'
+                'h-9 w-full rounded-lg border text-xs font-medium transition-all',
+                'border-[#007AFF]/30 bg-[#007AFF]/10 text-[#007AFF] shadow-sm'
               )}
             >
               480p
@@ -292,45 +289,23 @@ export function ClipSettings({
           </div>
         </div>
 
-        <div className="space-y-3">
-          <Label className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
-            AI Model
-          </Label>
-          <button
-            type="button"
-            onClick={selectSeedanceLite}
-            disabled={isGenerating}
-            className={cn(
-              "flex w-full flex-col rounded-2xl border px-4 py-3 text-left text-sm font-semibold",
-              "border-transparent bg-gradient-to-r from-[#c4b5fd]/80 via-[#a855f7]/80 to-[#7c3aed]/80 text-white shadow-[0_0_22px_rgba(124,58,237,0.45)]",
-            )}
-          >
-            <p>Seedance Lite</p>
-            <p className="text-xs font-normal text-white/40">
-              Bytedance via Replicate
-            </p>
-          </button>
-        </div>
-
         <TooltipProvider>
-          <div className="space-y-3 rounded-2xl border border-white/10 bg-black/40 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/55">
-              Advanced settings
-            </p>
+          <div className="space-y-4 rounded-xl bg-white/[0.03] p-4 border border-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Settings2 className="h-3.5 w-3.5 text-white/40" />
+              <p className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                Advanced
+              </p>
+            </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                <Label className="text-[10px] font-medium uppercase tracking-wider text-white/40">
                   Seed
                 </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
+                    <Info className="h-3 w-3 text-white/20 hover:text-white/40 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-xs">
                     Random seed. Set for reproducible generation.
@@ -354,23 +329,18 @@ export function ClipSettings({
                     updateAdvancedField({ seed: parsed });
                   }
                 }}
-                className="mt-1 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
+                className="input-glass h-8 text-xs"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                <Label className="text-[10px] font-medium uppercase tracking-wider text-white/40">
                   Init Image URL
                 </Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
+                    <Info className="h-3 w-3 text-white/20 hover:text-white/40 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-xs">
                     Input image for image-to-video generation.
@@ -387,9 +357,9 @@ export function ClipSettings({
                     setInitImageUrl(value);
                     updateAdvancedField({ image: value || undefined });
                   }}
-                  className="flex-1 mt-1 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
+                  className="input-glass h-8 text-xs flex-1"
                 />
-              <input
+                <input
                   ref={initImageFileInputRef}
                   type="file"
                   accept="image/*"
@@ -399,34 +369,21 @@ export function ClipSettings({
                 <Button
                   onClick={() => initImageFileInputRef.current?.click()}
                   variant="outline"
-                  className="mt-1 flex items-center gap-1 px-3 text-xs uppercase tracking-[0.25em]"
+                  size="sm"
+                  className="h-8 px-2 border-white/10 bg-white/5 hover:bg-white/10 text-white/60"
                 >
                   <Upload className="h-3 w-3" />
-                  Upload
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                <Label className="text-[10px] font-medium uppercase tracking-wider text-white/40">
                   Aspect Ratio
                 </Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    Video aspect ratio. Ignored if an image is used.
-                  </TooltipContent>
-                </Tooltip>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs">
+              <div className="flex flex-wrap gap-1.5">
                 {["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "9:21"].map(
                   (ratio) => (
                     <button
@@ -437,10 +394,10 @@ export function ClipSettings({
                         updateAdvancedField({ aspect_ratio: ratio });
                       }}
                       className={cn(
-                        "flex-1 rounded-full border px-3 py-1.5 font-semibold",
+                        "rounded-md border px-2 py-1 text-[10px] font-medium transition-colors",
                         aspectRatio === ratio
-                          ? "border-transparent bg-white text-black"
-                          : "border-white/20 text-white/70 hover:border-white/50",
+                          ? "border-[#007AFF]/30 bg-[#007AFF]/10 text-[#007AFF]"
+                          : "border-white/10 bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60",
                       )}
                     >
                       {ratio}
@@ -452,22 +409,9 @@ export function ClipSettings({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                <Label className="text-[10px] font-medium uppercase tracking-wider text-white/40">
                   Camera Fixed
                 </Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    Whether to fix camera position.
-                  </TooltipContent>
-                </Tooltip>
               </div>
               <button
                 type="button"
@@ -477,118 +421,18 @@ export function ClipSettings({
                   updateAdvancedField({ camera_fixed: next });
                 }}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium",
+                  "inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors w-full justify-center",
                   cameraFixed
-                    ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-100"
-                    : "border-white/20 bg-white/5 text-white/70",
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                    : "border-white/10 bg-white/5 text-white/40 hover:bg-white/10",
                 )}
               >
-                <span
-                  className={cn(
-                    "h-3 w-3 rounded-full border border-white/40",
-                    cameraFixed && "border-transparent bg-emerald-400",
-                  )}
-              />
-                {cameraFixed ? "Fixed" : "Free"}
+                <div className={cn(
+                  "h-2 w-2 rounded-full",
+                  cameraFixed ? "bg-emerald-400" : "bg-white/20"
+                )} />
+                {cameraFixed ? "Fixed Camera" : "Free Camera"}
               </button>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                  Last Frame Image URL
-                </Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    Input image for last frame generation. This only works if an image start frame is given too.
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="https://..."
-                  value={lastFrameImage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setLastFrameImage(value);
-                    updateAdvancedField({ last_frame_image: value || undefined });
-                  }}
-                  className="flex-1 mt-1 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
-                />
-                <input
-                  ref={lastFrameFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLastFrameImageUpload}
-                />
-                <Button
-                  onClick={() => lastFrameFileInputRef.current?.click()}
-                  variant="outline"
-                  className="mt-1 flex items-center gap-1 px-3 text-xs uppercase tracking-[0.25em]"
-                >
-                  <Upload className="h-3 w-3" />
-                  Upload
-                </Button>
-          </div>
-        </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                  Reference Images
-                </Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-white/40 hover:text-white/80"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    Reference images (1-4) to guide video generation. Cannot be used with 1080p or first/last frame images.
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="https://url1, https://url2, ..."
-                  value={referenceImagesText}
-                  onChange={(e) => handleReferenceTextChange(e.target.value)}
-                  className="flex-1 mt-1 border-white/10 bg-white/[0.03] text-sm text-white placeholder:text-white/30 focus:border-white/40"
-                />
-                <input
-                  ref={referenceFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleReferenceImagesUpload}
-                />
-                <Button
-                  onClick={() => referenceFileInputRef.current?.click()}
-                  variant="outline"
-                  className="mt-1 flex gap-1 px-3 text-xs uppercase tracking-[0.25em]"
-                >
-                  <Upload className="h-3 w-3" />
-                  Upload
-                </Button>
-              </div>
-              <p className="text-[11px] text-white/50">
-                Upload up to 4 images or paste comma-separated URLs.
-              </p>
             </div>
           </div>
         </TooltipProvider>
@@ -597,7 +441,7 @@ export function ClipSettings({
           <Button
             onClick={() => onGenerateClip(clip.id)}
             disabled={!canGenerate}
-            className="w-full rounded-full bg-gradient-to-r from-[#c4b5fd] via-[#a855f7] to-[#7c3aed] text-sm font-semibold shadow-[0_0_35px_rgba(124,58,237,0.55)] disabled:opacity-50"
+            className="w-full btn-primary h-10 rounded-xl"
           >
             {isGenerating ? (
               <>
@@ -606,8 +450,8 @@ export function ClipSettings({
               </>
             ) : (
               <>
-                <Play className="mr-2 h-4 w-4" />
-                Generate this clip
+                <Play className="mr-2 h-4 w-4 fill-current" />
+                Generate Clip
               </>
             )}
           </Button>

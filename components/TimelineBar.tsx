@@ -1,7 +1,8 @@
-// src/components/TimelineBar.tsx
 'use client';
 
 import { Clip } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { Clock, Film } from 'lucide-react';
 
 interface TimelineBarProps {
   clips: Clip[];
@@ -22,26 +23,31 @@ export function TimelineBar({
   );
 
   return (
-    <section className="sticky bottom-0 z-30 border-t border-white/5 bg-black/80 backdrop-blur-xl">
+    <section className="sticky bottom-0 z-30 border-t border-white/5 bg-black/40 backdrop-blur-xl">
       <div className="page-container py-3">
-        {/* 상단 정보 라인 */}
-        <div className="mb-2 flex items-center justify-between text-xs text-white/55">
-          <div className="flex items-center gap-2">
-            <span className="font-medium uppercase tracking-[0.18em] text-white/60">
+        {/* Header Info */}
+        <div className="mb-3 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold uppercase tracking-wider text-white/40 text-[10px]">
               Timeline
             </span>
-            <span className="text-white/35">
-              {clips.length} {clips.length === 1 ? 'clip' : 'clips'} ·{' '}
+            <div className="h-3 w-px bg-white/10" />
+            <span className="flex items-center gap-1.5 text-white/40">
+              <Film className="h-3 w-3" />
+              {clips.length} {clips.length === 1 ? 'clip' : 'clips'}
+            </span>
+            <span className="flex items-center gap-1.5 text-white/40">
+              <Clock className="h-3 w-3" />
               {totalDuration}s total
             </span>
           </div>
         </div>
 
-        {/* 타임라인 클립들 */}
-        <div className="flex gap-3 overflow-x-auto pb-2 pt-1">
+        {/* Timeline Clips */}
+        <div className="flex gap-2 overflow-x-auto pb-2 pt-1 custom-scrollbar">
           {clips.length === 0 && (
-            <div className="text-xs text-white/35">
-              Add a clip to start your flow.
+            <div className="flex h-12 w-full items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-xs text-white/30">
+              Add clips to start building your video flow
             </div>
           )}
 
@@ -54,21 +60,37 @@ export function TimelineBar({
                 key={clip.id}
                 type="button"
                 onClick={() => onSelectClip(clip.id)}
-                className={[
-                  'relative flex min-w-[120px] items-center justify-between rounded-full border px-4 py-2 text-xs transition-all',
-                  'border-white/15 bg-white/[0.03] hover:border-white/40',
-                  isSelected &&
-                    'border-transparent bg-gradient-to-r from-[#a855f7] via-[#8b5cf6] to-[#6366f1] text-white shadow-[0_0_22px_rgba(168,85,247,0.45)]',
-                  isPlaying && 'ring-2 ring-[#a855f7] ring-offset-0',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                className={cn(
+                  'group relative flex min-w-[140px] flex-col gap-1 rounded-xl border p-2 text-left transition-all duration-200',
+                  isSelected
+                    ? 'border-[#007AFF]/30 bg-[#007AFF]/10 shadow-sm'
+                    : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10',
+                  isPlaying && 'ring-1 ring-[#007AFF] ring-offset-1 ring-offset-black'
+                )}
               >
-                <div className="flex flex-1 items-center justify-between gap-2">
-                  <span className="text-[11px] font-semibold text-white/85">
+                <div className="flex w-full items-center justify-between">
+                  <span className={cn(
+                    "text-[11px] font-medium transition-colors",
+                    isSelected ? "text-[#007AFF]" : "text-white/70 group-hover:text-white/90"
+                  )}>
                     Clip {index + 1}
-                    </span>
-                  <span className="text-[10px] text-white/70">
+                  </span>
+                  {isPlaying && (
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-[#007AFF] shadow-[0_0_8px_rgba(0,122,255,0.8)]" />
+                  )}
+                </div>
+
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className={cn(
+                    "h-1 w-full rounded-full overflow-hidden",
+                    isSelected ? "bg-[#007AFF]/20" : "bg-white/10"
+                  )}>
+                    <div className={cn(
+                      "h-full w-1/2 rounded-full",
+                      isSelected ? "bg-[#007AFF]" : "bg-white/20"
+                    )} />
+                  </div>
+                  <span className="text-[10px] text-white/40 font-mono">
                     {clip.duration || 0}s
                   </span>
                 </div>
