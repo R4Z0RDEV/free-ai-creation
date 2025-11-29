@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function AdsBottomBar() {
+  const adRequested = useRef(false);
+
   useEffect(() => {
+    if (adRequested.current) return;
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
       (window as any).adsbygoogle.push({});
+      adRequested.current = true;
     } catch (e) {
       console.error(e);
     }
@@ -27,10 +31,17 @@ export function AdsBottomBar() {
 }
 
 export function AdsLeftBar() {
+  const adRequested = useRef(false);
+
   useEffect(() => {
+    if (adRequested.current) return;
+    // Only push if visible (lg breakpoint is 1024px)
+    if (window.innerWidth < 1024) return;
+
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
       (window as any).adsbygoogle.push({});
+      adRequested.current = true;
     } catch (e) {
       console.error(e);
     }
@@ -53,10 +64,17 @@ export function AdsLeftBar() {
 }
 
 export function AdsRightBar() {
+  const adRequested = useRef(false);
+
   useEffect(() => {
+    if (adRequested.current) return;
+    // Only push if visible (lg breakpoint is 1024px)
+    if (window.innerWidth < 1024) return;
+
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
       (window as any).adsbygoogle.push({});
+      adRequested.current = true;
     } catch (e) {
       console.error(e);
     }

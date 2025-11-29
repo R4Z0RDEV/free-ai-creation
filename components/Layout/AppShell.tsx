@@ -83,16 +83,7 @@ export function AppShell({
       <AdsLeftBar />
       <AdsRightBar />
       <AdsBottomBar />
-      <div className="pointer-events-auto fixed top-1/4 left-3 hidden flex-col gap-6 lg:flex">
-        <div className="w-[160px]">
-          <AdBanner slot="1688661815" />
-        </div>
-      </div>
-      <div className="pointer-events-auto fixed top-1/4 right-3 hidden flex-col gap-6 lg:flex">
-        <div className="w-[160px]">
-          <AdBanner slot="1688661815" />
-        </div>
-      </div>
+
     </div>
   );
 }
