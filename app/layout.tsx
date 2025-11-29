@@ -22,13 +22,13 @@ export default function RootLayout({
       <head>
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3943501773164281"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3621018373095111"
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
         <meta
           name="google-adsense-account"
-          content="ca-pub-3943501773164281"
+          content="ca-pub-3621018373095111"
         />
       </head>
       <body className={inter.className}>

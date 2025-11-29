@@ -21,7 +21,7 @@ function AdBanner({ slot, className }: AdBannerProps) {
       (window as typeof window & { adsbygoogle?: unknown }).adsbygoogle =
         (window as typeof window & { adsbygoogle?: unknown }).adsbygoogle || [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(window as any).adsbygoogle.push({});
+      ; (window as any).adsbygoogle.push({});
       setIsReady(true);
     } catch (error) {
       console.error('Failed to load AdSense slot:', error);
@@ -40,7 +40,7 @@ function AdBanner({ slot, className }: AdBannerProps) {
         className,
       )}
       style={{ display: 'block' }}
-      data-ad-client="ca-pub-3943501773164281"
+      data-ad-client="ca-pub-3621018373095111"
       data-ad-slot={slot}
       data-ad-format="auto"
       data-full-width-responsive="true"
@@ -74,12 +74,12 @@ export function AppShell({
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 -top-48 h-80 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.5),transparent_65%)] blur-3xl" />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(circle_at_bottom,_rgba(15,23,42,0.9),transparent_60%)]" />
-          </div>
+      </div>
       <div className="relative flex min-h-screen flex-col">
         <AppHeader />
         <main className={cn('flex-1', className)}>{children}</main>
         {withFooter && <AppFooter />}
-        </div>
+      </div>
       {showAds && (
         <>
           <AdsLeftBar />
