@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
                 version: AUDIO_LDM_VERSION,
                 input: {
                     text: text.trim(),
-                    duration: duration || "5.0",
+                    duration: String(duration || "5.0"),
                     ...(typeof random_seed === "number" ? { random_seed } : {}),
                     n_candidates: n_candidates || 3,
                     guidance_scale: guidance_scale || 2.5,
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
             }),
         });
 
-        const data = (await replicateRes.json()) as ReplicatePrediction;
+        let data = (await replicateRes.json()) as any;
 
         if (!replicateRes.ok) {
             console.error(
@@ -71,6 +71,43 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { error: "Failed to generate audio" },
                 { status: 500 },
+            );
+        }
+
+        // Poll if status is not terminal
+        if (data.status !== "succeeded" && data.status !== "failed" && data.status !== "canceled") {
+            const pollUrl = data.urls?.get;
+            if (pollUrl) {
+                let maxAttempts = 60; // Increase to 60 seconds
+                while (maxAttempts > 0) {
+                    if (data.status === "succeeded" || data.status === "failed" || data.status === "canceled") {
+                        break;
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    const pollRes = await fetch(pollUrl, {
+                        headers: {
+                            Authorization: `Bearer ${apiToken}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (!pollRes.ok) {
+                        console.error("Polling failed:", pollRes.status);
+                        break;
+                    }
+
+                    data = await pollRes.json();
+                    maxAttempts--;
+                }
+            }
+        }
+
+        if (data.status === "failed" || data.status === "canceled") {
+            console.error("Replicate prediction failed:", data.error);
+            return NextResponse.json(
+                { error: `Generation failed: ${data.error || "Unknown error"}` },
+                { status: 500 }
             );
         }
 
@@ -89,14 +126,6 @@ export async function POST(req: NextRequest) {
 
         const id = randomUUID();
         const createdAt = new Date().toISOString();
-
-        // Note: For audio, we might not need watermarking logic immediately, 
-        // or we can add it later. For now, we return the Replicate URL directly 
-        // or we could download and serve it. 
-        // Given the image implementation saves it, we might want to do similar if we want persistence,
-        // but for now let's return the direct URL as per the pattern in some other routes 
-        // (though image route does watermark). 
-        // The user didn't specify watermarking for audio, so direct URL is fine for MVP.
 
         return NextResponse.json(
             {

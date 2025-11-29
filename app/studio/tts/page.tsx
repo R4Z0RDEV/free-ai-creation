@@ -60,7 +60,8 @@ export default function TTSStudioPage() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to generate speech');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to generate speech');
             }
 
             const data = await response.json();

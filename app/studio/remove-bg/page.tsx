@@ -31,9 +31,22 @@ export default function RemoveBgStudioPage() {
             }
 
             const reader = new FileReader();
-            reader.onload = (e) => {
-                setOriginalImage(e.target?.result as string);
-                setResult(null);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0);
+                        // Convert to JPEG to ensure RGB (3 channels) and avoid tensor mismatch (4 vs 3)
+                        const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                        setOriginalImage(jpegDataUrl);
+                        setResult(null);
+                    }
+                };
+                img.src = event.target?.result as string;
             };
             reader.readAsDataURL(file);
         }

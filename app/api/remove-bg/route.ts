@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
             }),
         });
 
-        const data = (await replicateRes.json()) as ReplicatePrediction;
+        let data = (await replicateRes.json()) as any;
 
         if (!replicateRes.ok) {
             console.error(
@@ -63,15 +63,52 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Poll if status is not terminal
+        if (data.status !== "succeeded" && data.status !== "failed" && data.status !== "canceled") {
+            const pollUrl = data.urls?.get;
+            if (pollUrl) {
+                let maxAttempts = 60;
+                while (maxAttempts > 0) {
+                    if (data.status === "succeeded" || data.status === "failed" || data.status === "canceled") {
+                        break;
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    const pollRes = await fetch(pollUrl, {
+                        headers: {
+                            Authorization: `Bearer ${apiToken}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (!pollRes.ok) {
+                        console.error("Polling failed:", pollRes.status);
+                        break;
+                    }
+
+                    data = await pollRes.json();
+                    maxAttempts--;
+                }
+            }
+        }
+
+        if (data.status === "failed" || data.status === "canceled") {
+            console.error("Replicate prediction failed:", data.error);
+            return NextResponse.json(
+                { error: `Processing failed: ${data.error || "Unknown error"}` },
+                { status: 500 }
+            );
+        }
+
         const output = data.output;
 
-        if (!output) {
+        if (!output || typeof output !== 'string' || !output.startsWith('http')) {
             console.error(
-                "No image URL in Replicate response:",
+                "Invalid output from Replicate:",
                 JSON.stringify(data, null, 2),
             );
             return NextResponse.json(
-                { error: "Failed to remove background" },
+                { error: "Failed to remove background: Invalid output received" },
                 { status: 500 },
             );
         }

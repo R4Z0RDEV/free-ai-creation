@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
             }),
         });
 
-        const data = (await replicateRes.json()) as ReplicatePrediction;
+        let data = (await replicateRes.json()) as any;
 
         if (!replicateRes.ok) {
             console.error(
@@ -74,6 +74,43 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { error: "Failed to generate song" },
                 { status: 500 },
+            );
+        }
+
+        // Poll if status is not terminal
+        if (data.status !== "succeeded" && data.status !== "failed" && data.status !== "canceled") {
+            const pollUrl = data.urls?.get;
+            if (pollUrl) {
+                let maxAttempts = 120; // Increase to 120 seconds for songs as they might take longer
+                while (maxAttempts > 0) {
+                    if (data.status === "succeeded" || data.status === "failed" || data.status === "canceled") {
+                        break;
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    const pollRes = await fetch(pollUrl, {
+                        headers: {
+                            Authorization: `Bearer ${apiToken}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (!pollRes.ok) {
+                        console.error("Polling failed:", pollRes.status);
+                        break;
+                    }
+
+                    data = await pollRes.json();
+                    maxAttempts--;
+                }
+            }
+        }
+
+        if (data.status === "failed" || data.status === "canceled") {
+            console.error("Replicate prediction failed:", data.error);
+            return NextResponse.json(
+                { error: `Generation failed: ${data.error || "Unknown error"}` },
+                { status: 500 }
             );
         }
 

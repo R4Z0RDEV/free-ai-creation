@@ -8,17 +8,48 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Music, Sparkles, Mic2, Waves, Volume2 } from 'lucide-react';
+import { Music, Sparkles, Mic2, Waves, Volume2, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function AudioStudioPage() {
     const [prompt, setPrompt] = useState('');
+    const [duration, setDuration] = useState('5.0');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (!prompt) return;
+
         setIsGenerating(true);
-        // Simulate generation
-        setTimeout(() => setIsGenerating(false), 3000);
+        setAudioUrl(null);
+
+        try {
+            const response = await fetch('/api/audio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: prompt,
+                    duration: duration,
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to generate audio');
+            }
+
+            const data = await response.json();
+            setAudioUrl(data.audioUrl);
+            toast.success('Audio generated successfully!');
+        } catch (error) {
+            console.error('Audio generation error:', error);
+            toast.error('Failed to generate audio');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -61,19 +92,17 @@ export default function AudioStudioPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="label-glass">Duration</Label>
-                                    <Select defaultValue="5s">
-                                        <SelectTrigger className="input-glass">
-                                            <SelectValue placeholder="Select duration" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="5s">5 Seconds</SelectItem>
-                                            <SelectItem value="10s">10 Seconds</SelectItem>
-                                            <SelectItem value="30s">30 Seconds</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                <Select value={duration} onValueChange={setDuration}>
+                                    <SelectTrigger className="input-glass">
+                                        <SelectValue placeholder="Select duration" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="5.0">5 Seconds</SelectItem>
+                                        <SelectItem value="10.0">10 Seconds</SelectItem>
+                                        <SelectItem value="15.0">15 Seconds</SelectItem>
+                                        <SelectItem value="20.0">20 Seconds</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <Button
@@ -107,7 +136,7 @@ export default function AudioStudioPage() {
                         <GlassCard className="flex min-h-[600px] flex-col items-center justify-center p-8 text-center">
                             {isGenerating ? (
                                 <div className="space-y-4">
-                                    <div className="relative h-24 w-24">
+                                    <div className="relative h-24 w-24 mx-auto">
                                         <div className="absolute inset-0 animate-ping rounded-full bg-[#007AFF]/20" />
                                         <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
                                             <Volume2 className="h-10 w-10 animate-pulse" />
@@ -116,6 +145,32 @@ export default function AudioStudioPage() {
                                     <p className="text-lg font-medium text-[#1d1d1f] animate-pulse">
                                         Synthesizing audio...
                                     </p>
+                                </div>
+                            ) : audioUrl ? (
+                                <div className="w-full max-w-md space-y-8">
+                                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
+                                        <Music className="h-12 w-12" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-semibold text-[#1d1d1f]">Generation Complete</h3>
+                                        <p className="text-black/50">Here is your generated sound effect</p>
+                                    </div>
+
+                                    <div className="rounded-xl bg-black/5 p-4">
+                                        <audio controls className="w-full" src={audioUrl}>
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        className="w-full btn-glass"
+                                        onClick={() => window.open(audioUrl, '_blank')}
+                                    >
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download Audio
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className="max-w-md space-y-4">

@@ -8,17 +8,52 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Music, Sparkles, Disc, PlayCircle } from 'lucide-react';
+import { Music, Sparkles, Disc, PlayCircle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function SongStudioPage() {
     const [prompt, setPrompt] = useState('');
+    const [genre, setGenre] = useState('pop');
+    const [duration, setDuration] = useState('30');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (!prompt) return;
+
         setIsGenerating(true);
-        // Simulate generation
-        setTimeout(() => setIsGenerating(false), 5000);
+        setAudioUrl(null);
+
+        try {
+            // Combine prompt and genre for tags
+            const tags = `${genre}, ${prompt}`;
+
+            const response = await fetch('/api/song', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tags: tags,
+                    duration: parseInt(duration),
+                }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to generate song');
+            }
+
+            const data = await response.json();
+            setAudioUrl(data.audioUrl);
+            toast.success('Song generated successfully!');
+        } catch (error) {
+            console.error('Song generation error:', error);
+            toast.error('Failed to generate song');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -63,7 +98,7 @@ export default function SongStudioPage() {
 
                                 <div className="space-y-2">
                                     <Label className="label-glass">Genre</Label>
-                                    <Select defaultValue="pop">
+                                    <Select value={genre} onValueChange={setGenre}>
                                         <SelectTrigger className="input-glass">
                                             <SelectValue placeholder="Select genre" />
                                         </SelectTrigger>
@@ -80,14 +115,14 @@ export default function SongStudioPage() {
 
                                 <div className="space-y-2">
                                     <Label className="label-glass">Duration</Label>
-                                    <Select defaultValue="30s">
+                                    <Select value={duration} onValueChange={setDuration}>
                                         <SelectTrigger className="input-glass">
                                             <SelectValue placeholder="Select duration" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="30s">30 Seconds</SelectItem>
-                                            <SelectItem value="1m">1 Minute</SelectItem>
-                                            <SelectItem value="2m">2 Minutes</SelectItem>
+                                            <SelectItem value="30">30 Seconds</SelectItem>
+                                            <SelectItem value="60">1 Minute</SelectItem>
+                                            <SelectItem value="120">2 Minutes</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -124,7 +159,7 @@ export default function SongStudioPage() {
                         <GlassCard className="flex min-h-[600px] flex-col items-center justify-center p-8 text-center">
                             {isGenerating ? (
                                 <div className="space-y-4">
-                                    <div className="relative h-24 w-24">
+                                    <div className="relative h-24 w-24 mx-auto">
                                         <div className="absolute inset-0 animate-ping rounded-full bg-[#007AFF]/20" />
                                         <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
                                             <Music className="h-10 w-10 animate-bounce" />
@@ -133,6 +168,32 @@ export default function SongStudioPage() {
                                     <p className="text-lg font-medium text-[#1d1d1f] animate-pulse">
                                         Composing melody & lyrics...
                                     </p>
+                                </div>
+                            ) : audioUrl ? (
+                                <div className="w-full max-w-md space-y-8">
+                                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
+                                        <Disc className="h-12 w-12 animate-spin-slow" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-semibold text-[#1d1d1f]">Composition Complete</h3>
+                                        <p className="text-black/50">Here is your generated song</p>
+                                    </div>
+
+                                    <div className="rounded-xl bg-black/5 p-4">
+                                        <audio controls className="w-full" src={audioUrl}>
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        className="w-full btn-glass"
+                                        onClick={() => window.open(audioUrl, '_blank')}
+                                    >
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download Song
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className="max-w-md space-y-4">

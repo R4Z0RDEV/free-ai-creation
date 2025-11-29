@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
                 input: {
                     text: text.trim(),
                     speed: speed || 1.0,
-                    speaker: speaker || "EN-US",
+                    speaker_id: speaker || "EN-US",
                     language: language || "EN",
                 },
             }),
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
                 JSON.stringify(data, null, 2),
             );
             return NextResponse.json(
-                { error: "Failed to generate speech" },
+                { error: `Failed to generate speech: ${data.error || replicateRes.statusText}` },
                 { status: 500 },
             );
         }
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error("Replicate TTS route error:", error);
         return NextResponse.json(
-            { error: "Failed to generate speech" },
+            { error: `Failed to generate speech: ${error instanceof Error ? error.message : String(error)}` },
             { status: 500 },
         );
     }

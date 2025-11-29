@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 
 const REPLICATE_PREDICTIONS_URL = "https://api.replicate.com/v1/predictions";
 const ERASER_VERSION =
-    "826441c948a5792375c071be1dcd02e018592595ae9aa7ca756bf8e04c1bffc1";
+    "0e3a841c913f597c1e4c321560aa69e2bc1f15c65f8c366caafc379240efd8ba";
 
 type ReplicatePrediction = {
     output?: string | null;
@@ -16,20 +16,23 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
     try {
-        const { init_image, mask_image } = await req.json();
+        const { image, mask } = await req.json();
 
-        if (!init_image || typeof init_image !== "string") {
+        if (!image || typeof image !== "string") {
             return NextResponse.json(
                 { error: "Original image is required" },
                 { status: 400 },
             );
         }
-        if (!mask_image || typeof mask_image !== "string") {
+        if (!mask || typeof mask !== "string") {
             return NextResponse.json(
                 { error: "Mask image is required" },
                 { status: 400 },
             );
         }
+
+        console.log(`Received image: ${image.substring(0, 50)}... (${image.length} chars)`);
+        console.log(`Received mask: ${mask.substring(0, 50)}... (${mask.length} chars)`);
 
         const apiToken = process.env.REPLICATE_API_TOKEN;
         if (!apiToken) {
@@ -50,13 +53,13 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
                 version: ERASER_VERSION,
                 input: {
-                    image: init_image,
-                    mask: mask_image,
+                    image: image,
+                    mask: mask,
                 },
             }),
         });
 
-        const data = (await replicateRes.json()) as ReplicatePrediction;
+        let data = (await replicateRes.json()) as any;
 
         if (!replicateRes.ok) {
             console.error(
@@ -65,20 +68,59 @@ export async function POST(req: NextRequest) {
                 JSON.stringify(data, null, 2),
             );
             return NextResponse.json(
-                { error: "Failed to erase object" },
+                { error: `Failed to erase object: ${data.error || replicateRes.statusText}` },
                 { status: 500 },
             );
         }
 
+        // Poll if status is not terminal
+        if (data.status !== "succeeded" && data.status !== "failed" && data.status !== "canceled") {
+            const pollUrl = data.urls?.get;
+            if (pollUrl) {
+                let maxAttempts = 60; // Increase to 60 seconds
+                while (maxAttempts > 0) {
+                    if (data.status === "succeeded" || data.status === "failed" || data.status === "canceled") {
+                        break;
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    const pollRes = await fetch(pollUrl, {
+                        headers: {
+                            Authorization: `Bearer ${apiToken}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    if (pollRes.ok) {
+                        data = await pollRes.json();
+                    } else {
+                        console.warn("Polling failed:", pollRes.status);
+                    }
+                    maxAttempts--;
+                }
+            }
+        }
+
+        console.log("Final Replicate Status:", data.status);
+        console.log("Final Replicate Output:", data.output);
+        console.log("Full Replicate Data:", JSON.stringify(data, null, 2));
+
         const output = data.output;
 
-        if (!output) {
+        if (!output || typeof output !== 'string' || !output.startsWith('http')) {
             console.error(
-                "No image URL in Replicate response:",
+                "Invalid output from Replicate:",
                 JSON.stringify(data, null, 2),
             );
+
+            if (output === "No input, Save money") {
+                return NextResponse.json(
+                    { error: "Please highlight the object you want to erase" },
+                    { status: 400 },
+                );
+            }
+
             return NextResponse.json(
-                { error: "Failed to erase object" },
+                { error: "Failed to erase object: Invalid output received" },
                 { status: 500 },
             );
         }
@@ -97,7 +139,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error("Replicate eraser route error:", error);
         return NextResponse.json(
-            { error: "Failed to erase object" },
+            { error: `Failed to erase object: ${error instanceof Error ? error.message : String(error)}` },
             { status: 500 },
         );
     }

@@ -32,6 +32,10 @@ function EraserStudioContent() {
     const [isDrawing, setIsDrawing] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+    const [hasDrawn, setHasDrawn] = useState(false);
+
+    const [debugMask, setDebugMask] = useState<string | null>(null);
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -43,6 +47,8 @@ function EraserStudioContent() {
             reader.onload = (e) => {
                 setOriginalImage(e.target?.result as string);
                 setResult(null);
+                setHasDrawn(false);
+                setDebugMask(null);
             };
             reader.readAsDataURL(file);
         }
@@ -53,19 +59,30 @@ function EraserStudioContent() {
             const img = new Image();
             img.src = originalImage;
             img.onload = () => {
-                const maxHeight = 400;
-                const maxWidth = imageCanvasRef.current?.parentElement?.clientWidth || 600;
+                // Calculate dimensions to fit within the container while preserving aspect ratio
+                const container = imageCanvasRef.current?.parentElement?.parentElement;
+                const containerWidth = container?.clientWidth || 800;
+                const containerHeight = container?.clientHeight || 600;
+
+                // Add some padding
+                const maxWidth = containerWidth - 40;
+                const maxHeight = containerHeight - 40;
 
                 let width = img.width;
                 let height = img.height;
 
-                if (height > maxHeight) {
-                    width = (width * maxHeight) / height;
-                    height = maxHeight;
-                }
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
+                // Calculate aspect ratios
+                const imgAspectRatio = width / height;
+                const containerAspectRatio = maxWidth / maxHeight;
+
+                if (imgAspectRatio > containerAspectRatio) {
+                    // Image is wider than container
                     width = maxWidth;
+                    height = width / imgAspectRatio;
+                } else {
+                    // Image is taller than container
+                    height = maxHeight;
+                    width = height * imgAspectRatio;
                 }
 
                 setDimensions({ width, height });
@@ -75,7 +92,12 @@ function EraserStudioContent() {
                 imgCanvas.width = width;
                 imgCanvas.height = height;
                 const imgCtx = imgCanvas.getContext('2d');
-                if (imgCtx) imgCtx.drawImage(img, 0, 0, width, height);
+                if (imgCtx) {
+                    // Use high quality image scaling
+                    imgCtx.imageSmoothingEnabled = true;
+                    imgCtx.imageSmoothingQuality = 'high';
+                    imgCtx.drawImage(img, 0, 0, width, height);
+                }
 
                 // Setup Mask Canvas (Transparent on top)
                 const maskCanvas = maskCanvasRef.current!;
@@ -85,6 +107,8 @@ function EraserStudioContent() {
                 if (maskCtx) {
                     maskCtx.clearRect(0, 0, width, height);
                 }
+                setHasDrawn(false);
+                setDebugMask(null);
             };
         }
     }, [originalImage]);
@@ -119,6 +143,8 @@ function EraserStudioContent() {
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(x, y);
+
+        if (!hasDrawn) setHasDrawn(true);
     };
 
     const handleResetMask = () => {
@@ -126,58 +152,82 @@ function EraserStudioContent() {
         const ctx = canvas?.getContext('2d');
         if (canvas && ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            setHasDrawn(false);
+            setDebugMask(null);
         }
     };
 
     const handleErase = async () => {
-        if (!originalImage || !maskCanvasRef.current) return;
+        if (!imageCanvasRef.current || !maskCanvasRef.current) return;
+
+        if (!hasDrawn) {
+            toast.error('Please highlight the object you want to erase');
+            return;
+        }
 
         setIsProcessing(true);
+        setDebugMask(null);
 
         try {
             // Generate binary mask from the visual mask canvas
             const visualCanvas = maskCanvasRef.current;
+            const width = visualCanvas.width;
+            const height = visualCanvas.height;
             const binaryCanvas = document.createElement('canvas');
-            binaryCanvas.width = visualCanvas.width;
-            binaryCanvas.height = visualCanvas.height;
+            binaryCanvas.width = width;
+            binaryCanvas.height = height;
             const binaryCtx = binaryCanvas.getContext('2d');
 
             if (!binaryCtx) throw new Error("Failed to create mask context");
 
-            // Fill black (keep)
-            binaryCtx.fillStyle = 'black';
-            binaryCtx.fillRect(0, 0, binaryCanvas.width, binaryCanvas.height);
+            // Get the visual mask data (red strokes on transparent)
+            const visualCtx = visualCanvas.getContext('2d');
+            if (!visualCtx) throw new Error("Failed to get visual context");
+            const visualData = visualCtx.getImageData(0, 0, width, height);
 
-            // Draw white (erase) where user drew red
-            // We can use the visual canvas as source, but we need to treat non-transparent pixels as white
-            binaryCtx.drawImage(visualCanvas, 0, 0);
+            // Create new image data for the binary mask
+            const binaryData = binaryCtx.createImageData(width, height);
 
-            // Convert non-black pixels to white
-            const imageData = binaryCtx.getImageData(0, 0, binaryCanvas.width, binaryCanvas.height);
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                // If alpha > 0, make it white
-                if (data[i + 3] > 0) {
-                    data[i] = 255;
-                    data[i + 1] = 255;
-                    data[i + 2] = 255;
-                    data[i + 3] = 255; // Full opacity
+            // Convert pixels: Alpha > 0 -> White (Erase), Alpha == 0 -> Transparent (Keep)
+            for (let i = 0; i < visualData.data.length; i += 4) {
+                const alpha = visualData.data[i + 3];
+                if (alpha > 0) {
+                    // Mask area (White - Erase this)
+                    binaryData.data[i] = 255;     // R
+                    binaryData.data[i + 1] = 255; // G
+                    binaryData.data[i + 2] = 255; // B
+                    binaryData.data[i + 3] = 255; // A
+                } else {
+                    // Background (Transparent - Keep this)
+                    binaryData.data[i] = 0;       // R
+                    binaryData.data[i + 1] = 0;   // G
+                    binaryData.data[i + 2] = 0;   // B
+                    binaryData.data[i + 3] = 0;   // A
                 }
             }
-            binaryCtx.putImageData(imageData, 0, 0);
 
-            const maskDataUrl = binaryCanvas.toDataURL('image/png');
+            binaryCtx.putImageData(binaryData, 0, 0);
+
+            // Get base64 strings
+            // Convert image to JPEG to ensure RGB (3 channels) and remove Alpha, as required by the model
+            const imageBase64 = imageCanvasRef.current.toDataURL('image/jpeg', 0.95);
+            const maskBase64 = binaryCanvas.toDataURL('image/png');
+
+            setDebugMask(maskBase64);
 
             const response = await fetch('/api/eraser', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    init_image: originalImage,
-                    mask_image: maskDataUrl
+                    image: imageBase64,
+                    mask: maskBase64
                 }),
             });
 
-            if (!response.ok) throw new Error('Failed to erase');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to erase');
+            }
 
             const resData = await response.json();
             setResult({
@@ -188,33 +238,45 @@ function EraserStudioContent() {
 
         } catch (error) {
             console.error(error);
-            toast.error('Failed to erase object');
+            toast.error(error instanceof Error ? error.message : 'Failed to erase object');
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const handleDownload = () => {
-        if (!result?.originalUrl) return;
-        const a = document.createElement('a');
-        a.href = result.originalUrl;
-        a.download = `erased-${result.id}.png`;
-        a.click();
+    const handleDownload = async () => {
+        if (result?.originalUrl) {
+            try {
+                const response = await fetch(result.originalUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'erased-image.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Download failed:', error);
+                toast.error('Failed to download image');
+            }
+        }
     };
 
     return (
         <AppShell>
-            <div className="page-container pb-20 pt-32">
+            <div className="max-w-7xl mx-auto space-y-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="mb-12 text-center"
+                    className="text-center space-y-4"
                 >
-                    <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/50 text-[#007AFF] ring-1 ring-black/5 shadow-sm backdrop-blur-md">
-                        <Eraser className="h-8 w-8" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl shadow-black/5 mb-4">
+                        <Eraser className="w-8 h-8 text-[#007AFF]" />
                     </div>
-                    <h1 className="mb-4 text-4xl font-bold tracking-tight text-[#1d1d1f] sm:text-5xl">
+                    <h1 className="text-4xl font-bold tracking-tight text-black">
                         AI Magic Eraser
                     </h1>
                     <p className="mx-auto max-w-2xl text-lg text-black/60">
@@ -268,47 +330,57 @@ function EraserStudioContent() {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
+                                {/* Debug View for Mask */}
+                                {debugMask && (
+                                    <div className="mt-4 p-4 border border-black/10 rounded-xl bg-white/50">
+                                        <h3 className="text-xs font-bold uppercase text-black/50 mb-2">Debug: Generated Mask</h3>
+                                        <div className="relative h-40 w-full bg-[url('/grid.png')] bg-repeat rounded-lg overflow-hidden border border-black/10">
+                                            {/* Checkered background for transparency check */}
+                                            <div className="absolute inset-0" style={{
+                                                backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+                                                backgroundSize: '20px 20px',
+                                                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                                            }} />
+                                            <img
+                                                src={debugMask}
+                                                alt="Debug Mask"
+                                                className="relative h-full w-auto mx-auto object-contain"
+                                                style={{ border: '1px solid red' }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-black/40 mt-1 font-mono break-all">
+                                            Mask format: Transparent PNG (White=Erase, Transparent=Keep)
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="mt-6 flex justify-center gap-4">
                                     <Button
                                         onClick={handleResetMask}
                                         variant="outline"
-                                        className="flex-1 btn-glass h-10 hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5"
-                                        disabled={!originalImage || isProcessing}
+                                        className="btn-glass text-black/70 border-black/10 hover:bg-black/5"
+                                        disabled={isProcessing || !hasDrawn}
                                     >
-                                        <Undo className="w-3.5 h-3.5 mr-1.5" />
-                                        Clear Mask
+                                        Reset Mask
+                                    </Button>
+                                    <Button
+                                        onClick={handleErase}
+                                        disabled={isProcessing || !hasDrawn}
+                                        className="btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC]"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Erasing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eraser className="w-4 h-4 mr-2" />
+                                                Erase Object
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
-
-                                <Button
-                                    onClick={handleErase}
-                                    disabled={isProcessing || !originalImage}
-                                    className="w-full btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC] border-transparent shadow-lg hover:shadow-xl h-12"
-                                >
-                                    {isProcessing ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Erasing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Eraser className="w-4 h-4 mr-2" />
-                                            Erase Object
-                                        </>
-                                    )}
-                                </Button>
-
-                                {result && (
-                                    <Button
-                                        onClick={handleDownload}
-                                        variant="outline"
-                                        className="w-full btn-glass h-12"
-                                        disabled={isProcessing}
-                                    >
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Download Result
-                                    </Button>
-                                )}
                             </div>
                         </GlassCard>
                     </motion.div>
@@ -395,13 +467,25 @@ function EraserStudioContent() {
                                         </div>
                                     )}
 
-                                    {originalImage && result && !isProcessing && (
-                                        <BeforeAfterSlider
-                                            beforeSrc={originalImage}
-                                            afterSrc={result.originalUrl}
-                                            alt="Eraser comparison"
-                                            className="h-full w-full absolute inset-0"
-                                        />
+                                    {originalImage && result && !isProcessing && result.originalUrl && result.originalUrl.startsWith('http') && (
+                                        <>
+                                            <BeforeAfterSlider
+                                                beforeSrc={originalImage}
+                                                afterSrc={result.originalUrl}
+                                                alt="Eraser comparison"
+                                                className="h-full w-full absolute inset-0"
+                                            />
+                                            <div className="absolute bottom-4 left-4 right-4">
+                                                <Button
+                                                    onClick={handleDownload}
+                                                    className="w-full btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC] shadow-lg"
+                                                    disabled={isProcessing}
+                                                >
+                                                    <Download className="w-4 h-4 mr-2" />
+                                                    Download Result
+                                                </Button>
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </GlassCard>
