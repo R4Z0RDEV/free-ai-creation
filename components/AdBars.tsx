@@ -27,26 +27,52 @@ export function AdsBottomBar() {
 }
 
 export function AdsLeftBar() {
+  useEffect(() => {
+    try {
+      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      (window as any).adsbygoogle.push({});
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   return (
-    <div className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-30 w-32 h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-r-lg">
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center px-2 -rotate-90 whitespace-nowrap">
-          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ad</div>
-          <div className="text-xs text-gray-400">Left Banner</div>
-        </div>
+    <div className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-r-lg">
+      <div className="h-full flex items-center justify-center overflow-hidden">
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client="ca-pub-3621018373095111"
+          data-ad-slot="9276780283"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
       </div>
     </div>
   );
 }
 
 export function AdsRightBar() {
+  useEffect(() => {
+    try {
+      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      (window as any).adsbygoogle.push({});
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   return (
-    <div className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 z-30 w-32 h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-l-lg">
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center px-2 rotate-90 whitespace-nowrap">
-          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ad</div>
-          <div className="text-xs text-gray-400">Right Banner</div>
-        </div>
+    <div className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-l-lg">
+      <div className="h-full flex items-center justify-center overflow-hidden">
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client="ca-pub-3621018373095111"
+          data-ad-slot="5739207562"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
       </div>
     </div>
   );

@@ -80,12 +80,8 @@ export function AppShell({
         <main className={cn('flex-1', className)}>{children}</main>
         {withFooter && <AppFooter />}
       </div>
-      {showAds && (
-        <>
-          <AdsLeftBar />
-          <AdsRightBar />
-        </>
-      )}
+      <AdsLeftBar />
+      <AdsRightBar />
       <AdsBottomBar />
       <div className="pointer-events-auto fixed top-1/4 left-3 hidden flex-col gap-6 lg:flex">
         <div className="w-[160px]">
