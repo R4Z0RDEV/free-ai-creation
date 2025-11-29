@@ -1,9 +1,26 @@
+import { useEffect } from 'react';
+
 export function AdsBottomBar() {
+  useEffect(() => {
+    try {
+      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      (window as any).adsbygoogle.push({});
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 h-20 bg-gray-900/90 backdrop-blur border-t border-gray-800 flex items-center justify-center">
-      <div className="text-center px-4">
-        <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Advertisement</div>
-        <div className="text-sm text-gray-400">Bottom Banner Ad – Google AdSense Placeholder</div>
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center bg-gray-900/90 backdrop-blur border-t border-gray-800">
+      <div className="py-2">
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client="ca-pub-3621018373095111"
+          data-ad-slot="9468351971"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
       </div>
     </div>
   );
