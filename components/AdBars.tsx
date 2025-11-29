@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function AdsBottomBar() {
   const adRequested = useRef(false);
@@ -31,12 +31,21 @@ export function AdsBottomBar() {
 }
 
 export function AdsLeftBar() {
+  const [isVisible, setIsVisible] = useState(false);
   const adRequested = useRef(false);
 
   useEffect(() => {
-    if (adRequested.current) return;
-    // Only push if visible (lg breakpoint is 1024px)
-    if (window.innerWidth < 1024) return;
+    const checkVisibility = () => {
+      setIsVisible(window.innerWidth >= 1024);
+    };
+
+    checkVisibility();
+    window.addEventListener('resize', checkVisibility);
+    return () => window.removeEventListener('resize', checkVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible || adRequested.current) return;
 
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
@@ -45,7 +54,9 @@ export function AdsLeftBar() {
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [isVisible]);
+
+  if (!isVisible) return null;
 
   return (
     <div className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-r-lg">
@@ -64,12 +75,21 @@ export function AdsLeftBar() {
 }
 
 export function AdsRightBar() {
+  const [isVisible, setIsVisible] = useState(false);
   const adRequested = useRef(false);
 
   useEffect(() => {
-    if (adRequested.current) return;
-    // Only push if visible (lg breakpoint is 1024px)
-    if (window.innerWidth < 1024) return;
+    const checkVisibility = () => {
+      setIsVisible(window.innerWidth >= 1024);
+    };
+
+    checkVisibility();
+    window.addEventListener('resize', checkVisibility);
+    return () => window.removeEventListener('resize', checkVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible || adRequested.current) return;
 
     try {
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
@@ -78,7 +98,9 @@ export function AdsRightBar() {
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [isVisible]);
+
+  if (!isVisible) return null;
 
   return (
     <div className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 z-30 w-[160px] h-[600px] bg-gray-900/80 backdrop-blur border border-gray-800 rounded-l-lg">
