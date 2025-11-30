@@ -93,6 +93,25 @@ const benefits = [
 export default function Home() {
   return (
     <AppShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Free AI Creation",
+            "description": "The best free AI creative suite for video generation, image upscaling, and audio synthesis. No login required.",
+            "applicationCategory": "DesignApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "en-US",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })
+        }}
+      />
       <div className="page-container relative z-10 pb-20 pt-32">
         {/* Hero Section */}
         <div className="mb-10 text-center">
@@ -112,15 +131,17 @@ export default function Home() {
               <span className="bg-gradient-to-r from-[#007AFF] to-[#5856D6] bg-clip-text text-transparent">
                 Creative Potential
               </span>
+              <br />
+              with AI
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-black/60">
-              Create stunning videos, music, and art with our professional AI tools.
-              Free, unlimited, and designed for creators.
+              Generate cinematic videos, music, and art with our professional AI tools.
+              Free, unlimited, and designed for creators. No account required.
             </p>
             <div className="flex justify-center gap-4">
               <Link href="/studio/video">
                 <Button size="lg" className="px-8 py-4 text-lg rounded-full bg-[#007AFF] hover:bg-[#0066CC] text-white">
-                  Start Creating <ArrowRight className="ml-2 h-5 w-5" />
+                  Start Creating for Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/about">
@@ -243,6 +264,42 @@ export default function Home() {
                 <h3 className="mb-2 text-xl font-semibold text-[#1d1d1f]">{benefit.title}</h3>
                 <p className="text-black/50">{benefit.description}</p>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="page-section relative z-10 pb-32">
+        <div className="page-container max-w-4xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-[#1d1d1f] mb-4">Frequently Asked Questions</h2>
+            <p className="text-black/60">Everything you need to know about Free AI Creation.</p>
+          </div>
+
+          <div className="grid gap-6">
+            {[
+              {
+                q: "Is it really free?",
+                a: "Yes, Free AI Creation allows you to generate videos, images, and audio completely for free without any hidden costs."
+              },
+              {
+                q: "Do I need to sign up?",
+                a: "No account is needed. You can start creating immediately without logging in or providing credit card details."
+              },
+              {
+                q: "Can I use the generated content commercially?",
+                a: "Yes, you own the rights to the content you generate. Please refer to our terms for specific model licenses."
+              },
+              {
+                q: "How does the AI Upscaler work?",
+                a: "Our AI enhances image resolution up to 4K by filling in missing details, making your photos crisp and clear instantly."
+              }
+            ].map((faq, index) => (
+              <GlassCard key={index} className="p-6 md:p-8">
+                <h3 className="text-lg font-semibold text-[#1d1d1f] mb-3">{faq.q}</h3>
+                <p className="text-black/60 leading-relaxed">{faq.a}</p>
+              </GlassCard>
             ))}
           </div>
         </div>

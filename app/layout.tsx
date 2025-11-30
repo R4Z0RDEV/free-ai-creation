@@ -14,8 +14,24 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: 'Free AI Creative Studio',
-  description: 'Professional creative tools for everyone. Create stunning videos, music, and art.',
+  title: 'Free AI Creation - No Login AI Video, Image & Audio Generator',
+  description: 'Create stunning AI videos, upscale images to 4K, generate 3D models and music for free. No credit card or sign-up required. Your all-in-one free AI creative studio.',
+  keywords: [
+    "Free AI Video Generator",
+    "Text to Video AI",
+    "AI Image Upscaler",
+    "Background Remover",
+    "AI Music Generator",
+    "Text to 3D",
+    "No Sign up AI",
+    "Free AI Tools"
+  ],
+  openGraph: {
+    locale: 'en_US',
+    type: 'website',
+    description: "Unlimited Free AI Tools. Create Videos, Images, and Audio instantly without login.",
+    siteName: "Free AI Creation",
+  },
 };
 
 export default function RootLayout({

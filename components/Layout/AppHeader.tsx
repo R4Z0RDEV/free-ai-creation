@@ -69,10 +69,10 @@ export function AppHeader() {
                           Visual Studio
                         </h4>
                         <div className="grid grid-cols-2 gap-1">
-                          <ListItem href="/studio/image" title="Image Generation" icon={ImageIcon}>
+                          <ListItem href="/studio/image" title="AI Image Lab" icon={ImageIcon}>
                             Create stunning artwork
                           </ListItem>
-                          <ListItem href="/studio/video" title="Video Generation" icon={Video}>
+                          <ListItem href="/studio/video" title="AI Video Studio" icon={Video}>
                             Cinematic clips
                           </ListItem>
                           <ListItem href="/studio/upscale" title="Image Upscale" icon={Maximize}>
@@ -86,7 +86,7 @@ export function AppHeader() {
                           Audio & Music
                         </h4>
                         <div className="grid grid-cols-2 gap-1">
-                          <ListItem href="/studio/audio" title="Audio FX" icon={Music}>
+                          <ListItem href="/studio/audio" title="AI Audio FX" icon={Music}>
                             Sound effects
                           </ListItem>
                           <ListItem href="/studio/song" title="Song Creator" icon={Music}>
@@ -103,7 +103,7 @@ export function AppHeader() {
                           Tools
                         </h4>
                         <div className="grid grid-cols-2 gap-1">
-                          <ListItem href="/studio/remove-bg" title="Remove Background" icon={Scissors}>
+                          <ListItem href="/studio/remove-bg" title="Magic Eraser" icon={Scissors}>
                             Transparent PNGs
                           </ListItem>
                           <ListItem href="/studio/eraser" title="Magic Eraser" icon={Eraser}>
