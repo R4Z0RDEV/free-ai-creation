@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Video, Image as ImageIcon, Maximize, Check, ArrowRight, Music, Mic, Scissors, Eraser, Sparkles } from 'lucide-react';
+import { Video, Image as ImageIcon, Maximize, Check, ArrowRight, Music, Mic, Scissors, Eraser, Sparkles, PenTool } from 'lucide-react';
 import { AppShell } from '@/components/Layout/AppShell';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,14 @@ const tools = [
     href: '/studio/eraser',
     span: 'col-span-1',
     gradient: 'from-slate-500/20 to-gray-500/20',
+  },
+  {
+    icon: PenTool,
+    title: 'AI Vectorizer',
+    description: 'Convert to SVG.',
+    href: '/studio/vector',
+    span: 'col-span-1',
+    gradient: 'from-orange-500/20 to-amber-500/20',
   },
 ];
 

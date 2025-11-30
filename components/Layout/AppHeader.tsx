@@ -12,6 +12,7 @@ import {
   Mic,
   Scissors,
   Eraser,
+  PenTool,
 } from "lucide-react";
 import React from 'react';
 import {
@@ -77,6 +78,9 @@ export function AppHeader() {
                           </ListItem>
                           <ListItem href="/studio/upscale" title="Image Upscale" icon={Maximize}>
                             Enhance resolution
+                          </ListItem>
+                          <ListItem href="/studio/vector" title="AI Vectorizer" icon={PenTool}>
+                            Convert to SVG
                           </ListItem>
                         </div>
                       </div>
