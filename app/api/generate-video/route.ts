@@ -27,6 +27,8 @@ interface GenerateVideoRequest {
   camera_fixed?: boolean;
   last_frame_image?: string;
   reference_images?: string[];
+  resolution?: string;
+  fps?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -41,6 +43,8 @@ export async function POST(request: NextRequest) {
       camera_fixed,
       last_frame_image,
       reference_images,
+      resolution,
+      fps,
     } = body;
 
     if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
@@ -60,10 +64,15 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedDuration =
-      typeof duration === "number" && Number.isFinite(duration) ? duration : 3;
-    const finalDuration = Math.max(2, Math.min(5, requestedDuration));
-    const inputResolution = "480p";
-    const fps = 24;
+      typeof duration === "number" && Number.isFinite(duration) ? duration : 5;
+    const finalDuration = Math.max(2, Math.min(12, requestedDuration));
+
+    const finalResolution = ["480p", "720p", "1080p"].includes(resolution || "")
+      ? resolution
+      : "720p";
+
+    const finalFps = typeof fps === "number" && fps === 24 ? 24 : 24;
+
     const finalAspectRatio =
       typeof aspect_ratio === "string" && aspect_ratio.trim()
         ? aspect_ratio.trim()
@@ -72,9 +81,9 @@ export async function POST(request: NextRequest) {
     const input: Record<string, unknown> = {
       prompt: prompt.trim(),
       duration: finalDuration,
-      resolution: inputResolution,
+      resolution: finalResolution,
       aspect_ratio: finalAspectRatio,
-      fps,
+      fps: finalFps,
     };
 
     if (typeof seed === "number" && Number.isFinite(seed)) {
@@ -96,8 +105,8 @@ export async function POST(request: NextRequest) {
     const referenceImages =
       Array.isArray(reference_images) && reference_images.length > 0
         ? reference_images
-            .map((url) => url.trim())
-            .filter((url) => url.length > 0)
+          .map((url) => url.trim())
+          .filter((url) => url.length > 0)
         : [];
 
     if (referenceImages.length > 0) {
