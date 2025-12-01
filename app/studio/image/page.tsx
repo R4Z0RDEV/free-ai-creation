@@ -57,11 +57,8 @@ export default function ImageStudioPage() {
   const initialPreset = resolutionPresets[resolution] ?? resolutionPresets['1024x1024'];
   const [width, setWidth] = useState<number | ''>(initialPreset.width);
   const [height, setHeight] = useState<number | ''>(initialPreset.height);
-  const [scheduler, setScheduler] = useState('K_EULER');
-  const [numOutputs, setNumOutputs] = useState<number | ''>(1);
-  const [guidanceScale, setGuidanceScale] = useState<number | ''>(7.5);
-  const [negativePrompt, setNegativePrompt] = useState('');
-  const [numInferenceSteps, setNumInferenceSteps] = useState<number | ''>(50);
+  const [guidanceScale, setGuidanceScale] = useState<number | ''>(0);
+  const [numInferenceSteps, setNumInferenceSteps] = useState<number | ''>(8);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [unlockingImageId, setUnlockingImageId] = useState<string | null>(null);
@@ -127,10 +124,7 @@ export default function ImageStudioPage() {
           seed,
           width,
           height,
-          scheduler,
-          num_outputs: numOutputs,
           guidance_scale: guidanceScale,
-          negative_prompt: negativePrompt,
           num_inference_steps: numInferenceSteps,
         }),
       });
@@ -250,15 +244,7 @@ export default function ImageStudioPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="label-glass">Negative Prompt</Label>
-                  <Textarea
-                    placeholder="What to exclude (e.g. blur, distortion)"
-                    value={negativePrompt}
-                    onChange={(e) => setNegativePrompt(e.target.value)}
-                    className="input-glass min-h-[80px] resize-none text-sm"
-                  />
-                </div>
+
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -321,9 +307,9 @@ export default function ImageStudioPage() {
                       </div>
                       <input
                         type="range"
-                        min="1"
+                        min="0"
                         max="20"
-                        step="0.5"
+                        step="0.1"
                         value={guidanceScale}
                         onChange={(e) => setGuidanceScale(Number(e.target.value))}
                         className="w-full h-1.5 bg-black/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#007AFF]"
@@ -347,8 +333,8 @@ export default function ImageStudioPage() {
                       </div>
                       <input
                         type="range"
-                        min="20"
-                        max="100"
+                        min="1"
+                        max="50"
                         step="1"
                         value={numInferenceSteps}
                         onChange={(e) => setNumInferenceSteps(Number(e.target.value))}

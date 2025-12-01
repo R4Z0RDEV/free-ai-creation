@@ -6,7 +6,7 @@ import { getBaseUrl } from "@/lib/baseUrl";
 
 const REPLICATE_PREDICTIONS_URL = "https://api.replicate.com/v1/predictions";
 const STABLE_DIFFUSION_VERSION =
-  "ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4";
+  "7ea16386290ff5977c7812e66e462d7ec3954d8e007a8cd18ded3e7d41f5d7cf";
 
 type ReplicatePrediction = {
   output?: string | string[] | null;
@@ -59,11 +59,10 @@ export async function POST(req: NextRequest) {
       seed,
       width,
       height,
-      scheduler,
-      num_outputs,
       guidance_scale,
-      negative_prompt,
       num_inference_steps,
+      output_format,
+      output_quality,
     } = await req.json();
 
     if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
@@ -96,7 +95,8 @@ export async function POST(req: NextRequest) {
         version: STABLE_DIFFUSION_VERSION,
         input: {
           prompt: finalPrompt,
-          scheduler: scheduler || "K_EULER",
+          output_format: output_format || "jpg",
+          output_quality: output_quality || 80,
           ...(resolutionSize.width && resolutionSize.height
             ? { width: resolutionSize.width, height: resolutionSize.height }
             : {}),
@@ -109,19 +109,13 @@ export async function POST(req: NextRequest) {
           ...(typeof height === "number" && Number.isFinite(height)
             ? { height }
             : {}),
-          ...(typeof num_outputs === "number" && Number.isFinite(num_outputs)
-            ? { num_outputs }
-            : {}),
           ...(typeof guidance_scale === "number" &&
-          Number.isFinite(guidance_scale)
+            Number.isFinite(guidance_scale)
             ? { guidance_scale }
             : {}),
           ...(typeof num_inference_steps === "number" &&
-          Number.isFinite(num_inference_steps)
+            Number.isFinite(num_inference_steps)
             ? { num_inference_steps }
-            : {}),
-          ...(negative_prompt && negative_prompt.trim()
-            ? { negative_prompt: negative_prompt.trim() }
             : {}),
         },
       }),
