@@ -1,4 +1,5 @@
 import { Video } from 'lucide-react';
+import Link from 'next/link';
 import { Badge } from './ui/badge';
 
 export function Header() {
@@ -12,9 +13,14 @@ export function Header() {
           <h1 className="text-xl font-bold text-white">Free AI Video Studio</h1>
         </div>
 
-        <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
-          Seedance Lite Environment
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Link href="/blog" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+            Blog
+          </Link>
+          <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
+            Seedance Lite Environment
+          </Badge>
+        </div>
       </div>
     </header>
   );

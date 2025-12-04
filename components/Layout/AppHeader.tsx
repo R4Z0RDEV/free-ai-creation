@@ -132,6 +132,14 @@ export function AppHeader() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
+                  <Link href="/blog" legacyBehavior passHref>
+                    <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-black/70 transition-colors hover:text-black focus:text-black focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                      Blog
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
                   <Link href="/guide" legacyBehavior passHref>
                     <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-black/70 transition-colors hover:text-black focus:text-black focus:outline-none disabled:pointer-events-none disabled:opacity-50">
                       Guide
