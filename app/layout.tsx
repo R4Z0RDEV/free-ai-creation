@@ -48,6 +48,19 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17783777676"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17783777676');
+          `}
+        </Script>
         <meta
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
