@@ -278,12 +278,24 @@ export default function RemoveBgStudioPage() {
                                     )}
 
                                     {originalImage && result && !isProcessing && (
-                                        <BeforeAfterSlider
-                                            beforeSrc={originalImage}
-                                            afterSrc={result.originalUrl}
-                                            alt="Background removal comparison"
-                                            className="h-full w-full absolute inset-0"
-                                        />
+                                        <>
+                                            <BeforeAfterSlider
+                                                beforeSrc={originalImage}
+                                                afterSrc={result.originalUrl}
+                                                alt="Background removal comparison"
+                                                className="h-full w-full absolute inset-0"
+                                            />
+                                            <div className="absolute bottom-4 right-4 z-10">
+                                                <Button
+                                                    onClick={handleDownload}
+                                                    className="btn-glass bg-[#007AFF] text-white hover:bg-[#0066CC] shadow-lg"
+                                                    size="sm"
+                                                >
+                                                    <Download className="w-4 h-4 mr-2" />
+                                                    Download
+                                                </Button>
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </GlassCard>
