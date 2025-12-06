@@ -23,24 +23,27 @@ export async function POST(request: Request) {
             );
         }
 
-        const systemPrompt = `You are an expert prompt engineer for AI image generation. Your task is to take a user's raw, simple prompt and enhance it to be more descriptive, artistic, and detailed to produce a high-quality image.
-    
-    Rules:
-    1. Keep the core meaning of the original prompt.
-    2. Add artistic style, lighting, texture, and composition details.
-    3. Output ONLY the enhanced prompt. Do not add any conversational text, prefixes, or suffixes.
-    4. Keep it concise but potent (around 20-40 words).`;
-
         const input = {
             top_p: 0.9,
-            prompt: `${systemPrompt}\n\nUser Prompt: ${prompt}\n\nEnhanced Prompt:`,
+            prompt: `You are an expert prompt engineer for AI image generation. Take the user's simple prompt and enhance it to be more descriptive and artistic for high-quality image generation.
+
+Rules:
+- Keep the core meaning of the original prompt
+- Add artistic style, lighting, texture, and composition details
+- Output ONLY the enhanced prompt text, nothing else - no code, no explanations, no prefixes
+- Keep it concise (20-40 words)
+
+User's prompt: "${prompt}"
+
+Enhanced version:`,
             min_tokens: 0,
             temperature: 0.7,
             presence_penalty: 0,
+            max_tokens: 150,
         };
 
         const output = await replicate.run(
-            "meta/meta-llama-3-8b",
+            "meta/meta-llama-3-8b-instruct",
             { input }
         );
 

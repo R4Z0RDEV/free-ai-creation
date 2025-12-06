@@ -65,11 +65,9 @@ export async function POST(request: NextRequest) {
 
     const requestedDuration =
       typeof duration === "number" && Number.isFinite(duration) ? duration : 5;
-    const finalDuration = Math.max(2, Math.min(12, requestedDuration));
+    const finalDuration = Math.max(2, Math.min(5, requestedDuration));
 
-    const finalResolution = ["480p", "720p", "1080p"].includes(resolution || "")
-      ? resolution
-      : "720p";
+    const finalResolution = "480p";
 
     const finalFps = typeof fps === "number" && fps === 24 ? 24 : 24;
 

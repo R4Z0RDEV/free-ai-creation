@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAdblockDetector } from '@/hooks/useAdblockDetector';
 import { motion } from 'framer-motion';
 import { AppShell } from '@/components/Layout/AppShell';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -21,13 +22,13 @@ export default function VideoStudioPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [duration, setDuration] = useState('5s');
-  const [resolution, setResolution] = useState('720p');
   const [aspectRatio, setAspectRatio] = useState('16:9');
   const [cameraFixed, setCameraFixed] = useState(false);
   const [seed, setSeed] = useState<number | ''>('');
   const [image, setImage] = useState<string | null>(null);
   const [lastFrameImage, setLastFrameImage] = useState<string | null>(null);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const { isBlocked: isAdBlockEnabled } = useAdblockDetector();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | null) => void) => {
     const file = e.target.files?.[0];
@@ -95,6 +96,13 @@ export default function VideoStudioPage() {
       return;
     }
 
+    if (isAdBlockEnabled) {
+      toast.error('광고 차단 프로그램이 감지되었습니다. 비디오를 생성하려면 광고 차단 기능을 비활성화해주세요.', {
+        duration: 5000,
+      });
+      return;
+    }
+
     setIsGenerating(true);
     setGeneratedVideoUrl(null);
 
@@ -107,7 +115,7 @@ export default function VideoStudioPage() {
         body: JSON.stringify({
           prompt,
           duration: durationNum,
-          resolution,
+          resolution: '480p',
           aspect_ratio: aspectRatio,
           camera_fixed: cameraFixed,
           seed: seed === '' ? undefined : Number(seed),
@@ -202,35 +210,25 @@ export default function VideoStudioPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="label-glass">Duration</Label>
-                    <Select value={duration} onValueChange={setDuration}>
-                      <SelectTrigger className="input-glass">
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2s">2 Seconds</SelectItem>
-                        <SelectItem value="5s">5 Seconds</SelectItem>
-                        <SelectItem value="8s">8 Seconds</SelectItem>
-                        <SelectItem value="10s">10 Seconds</SelectItem>
-                        <SelectItem value="12s">12 Seconds</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="label-glass">Duration</Label>
+                  <Select value={duration} onValueChange={setDuration}>
+                    <SelectTrigger className="input-glass">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2s">2 Seconds</SelectItem>
+                      <SelectItem value="3s">3 Seconds</SelectItem>
+                      <SelectItem value="4s">4 Seconds</SelectItem>
+                      <SelectItem value="5s">5 Seconds</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="label-glass">Resolution</Label>
-                    <Select value={resolution} onValueChange={setResolution}>
-                      <SelectTrigger className="input-glass">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="480p">480p</SelectItem>
-                        <SelectItem value="720p">720p</SelectItem>
-                        <SelectItem value="1080p">1080p</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-2">
+                  <Label className="label-glass">Resolution</Label>
+                  <div className="input-glass h-10 flex items-center px-3 text-sm text-black/60">
+                    480p (Fixed)
                   </div>
                 </div>
 
@@ -472,6 +470,6 @@ export default function VideoStudioPage() {
           </motion.div>
         </div>
       </div>
-    </AppShell>
+    </AppShell >
   );
 }

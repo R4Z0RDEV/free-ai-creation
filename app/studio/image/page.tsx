@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAdblockDetector } from '@/hooks/useAdblockDetector';
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/Layout/AppShell";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -63,6 +64,7 @@ export default function ImageStudioPage() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [unlockingImageId, setUnlockingImageId] = useState<string | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const { isBlocked: isAdBlockEnabled, isChecking: isCheckingAdBlock } = useAdblockDetector();
 
   const handleEnhancePrompt = async () => {
     if (!prompt.trim()) return;
@@ -105,6 +107,13 @@ export default function ImageStudioPage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error('Please enter a prompt');
+      return;
+    }
+
+    if (isAdBlockEnabled) {
+      toast.error('광고 차단 프로그램이 감지되었습니다. 이미지를 생성하려면 광고 차단 기능을 비활성화해주세요.', {
+        duration: 5000,
+      });
       return;
     }
 
