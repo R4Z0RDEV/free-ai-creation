@@ -70,12 +70,17 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
         />
+        <Script id="ad-script-1" strategy="afterInteractive">
+          {`(function(s){s.dataset.zone='10284423',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`}
+        </Script>
         <script
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="190754"
-          async
+          src="https://3nbf4.com/act/files/tag.min.js?z=10284815"
           data-cfasync="false"
+          async
         />
+        <Script id="ad-script-2" strategy="afterInteractive">
+          {`(function(s){s.dataset.zone='10284817',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`}
+        </Script>
       </head>
       <body className={cn(
         bricolage.className,
