@@ -70,27 +70,6 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
         />
-        {/* Monetag Scripts - Commented out for now
-        <Script
-          id="monetag-1"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10284423',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-        <Script
-          src="https://3nbf4.com/act/files/tag.min.js?z=10284815"
-          data-cfasync="false"
-          strategy="beforeInteractive"
-        />
-        <Script
-          id="monetag-2"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='10284817',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
-          }}
-        />
-        */}
       </head>
       <body className={cn(
         bricolage.className,
