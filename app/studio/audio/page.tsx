@@ -164,8 +164,7 @@ export default function AudioStudioPage() {
                                     </div>
 
                                     <Button
-                                        variant="outline"
-                                        className="w-full btn-glass"
+                                        className="w-full bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md"
                                         onClick={() => window.open(audioUrl, '_blank')}
                                     >
                                         <Download className="mr-2 h-4 w-4" />

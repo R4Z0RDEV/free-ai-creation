@@ -166,8 +166,7 @@ export default function RemoveBgStudioPage() {
                                 {result && (
                                     <Button
                                         onClick={handleDownload}
-                                        variant="outline"
-                                        className="w-full btn-glass h-12"
+                                        className="w-full bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md h-12"
                                         disabled={isProcessing}
                                     >
                                         <Download className="w-4 h-4 mr-2" />

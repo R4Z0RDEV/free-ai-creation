@@ -301,8 +301,7 @@ export default function UpscaleStudioPage() {
                 <div className="flex flex-col gap-3 pt-2">
                   <Button
                     onClick={handleDownload}
-                    variant="outline"
-                    className="w-full btn-glass h-10"
+                    className="w-full bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md h-10"
                     disabled={isUpscaling}
                   >
                     <Download className="w-4 h-4 mr-2" />

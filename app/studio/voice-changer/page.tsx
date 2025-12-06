@@ -311,7 +311,7 @@ export default function VoiceChangerStudioPage() {
                                     <a
                                         href={resultUrl}
                                         download="changed-voice.mp3"
-                                        className="inline-flex items-center justify-center h-7 px-3 text-xs font-medium bg-white/50 hover:bg-white/80 border border-black/5 rounded-lg transition-colors"
+                                        className="inline-flex items-center justify-center h-7 px-3 text-xs font-medium bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md rounded-lg transition-colors"
                                     >
                                         <Download className="w-3 h-3 mr-1.5" />
                                         Download

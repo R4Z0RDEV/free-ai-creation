@@ -445,8 +445,7 @@ export default function VideoStudioPage() {
                   <div className="mt-6 flex gap-4">
                     <Button
                       onClick={handleDownload}
-                      className="btn-glass"
-                      variant="secondary"
+                      className="bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md"
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download Video

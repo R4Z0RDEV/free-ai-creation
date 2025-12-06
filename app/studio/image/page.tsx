@@ -391,8 +391,7 @@ export default function ImageStudioPage() {
                     <Button
                       onClick={handleDownloadWithGate}
                       size="sm"
-                      variant="secondary"
-                      className="h-8 text-xs btn-glass"
+                      className="h-8 text-xs bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md"
                     >
                       <Download className="w-3.5 h-3.5 mr-1.5" />
                       Download

@@ -180,8 +180,7 @@ export default function SubtitlesStudioPage() {
                                     <Button
                                         onClick={handleDownload}
                                         size="sm"
-                                        variant="secondary"
-                                        className="h-7 text-xs btn-glass"
+                                        className="h-7 text-xs bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md"
                                     >
                                         <Download className="w-3 h-3 mr-1.5" />
                                         Download SRT

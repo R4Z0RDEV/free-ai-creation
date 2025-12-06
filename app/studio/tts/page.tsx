@@ -265,8 +265,7 @@ export default function TTSStudioPage() {
                                                     a.download = `tts-${currentTTS.id}.mp3`;
                                                     a.click();
                                                 }}
-                                                variant="outline"
-                                                className="rounded-xl border-black/10 bg-white/50 text-xs font-semibold uppercase tracking-wider text-black/70 hover:bg-white/80 hover:text-[#007AFF] hover:border-[#007AFF]/50 transition-all px-6 py-5"
+                                                className="bg-[#007AFF] text-white hover:bg-[#0056b3] border-none shadow-md rounded-xl px-6 py-5 text-xs font-semibold uppercase tracking-wider"
                                             >
                                                 <Download className="w-4 h-4 mr-2" />
                                                 Download Speech
