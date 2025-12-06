@@ -59,6 +59,11 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'AW-17783777676');
+            gtag('event', 'conversion', {
+              'send_to': 'AW-17783777676/96nKCNOo9cwbEIzT-59C',
+              'value': 1.0,
+              'currency': 'KRW'
+            });
           `}
         </Script>
         <meta
