@@ -52,6 +52,13 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
         />
+        <Script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="190754"
+          async
+          data-cfasync="false"
+          strategy="beforeInteractive"
+        />
       </head>
       <body className={cn(
         bricolage.className,
