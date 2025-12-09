@@ -4,19 +4,22 @@ import { saveWatermarkedImage } from "@/lib/watermarkStore";
 import { applyImageWatermarkFromUrl } from "@/lib/imageWatermark";
 import { getBaseUrl } from "@/lib/baseUrl";
 
-const REPLICATE_PREDICTIONS_URL = "https://api.replicate.com/v1/predictions";
-const STABLE_DIFFUSION_VERSION =
-  "7ea16386290ff5977c7812e66e462d7ec3954d8e007a8cd18ded3e7d41f5d7cf";
+const REPLICATE_API_URL = "https://api.replicate.com/v1/models/prunaai/z-image-turbo/predictions";
 
 type ReplicatePrediction = {
+  id?: string;
+  status?: string;
   output?: string | string[] | null;
   error?: string;
+  urls?: {
+    get?: string;
+  };
 };
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function buildStableDiffusionPrompt(
+function buildPrompt(
   prompt: string,
   style?: string,
 ): string {
@@ -41,12 +44,12 @@ function parseResolution(resolution?: string): {
   width?: number;
   height?: number;
 } {
-  if (!resolution) return {};
+  if (!resolution) return { width: 1024, height: 1024 };
   const match = resolution.match(/(\d+)x(\d+)/i);
-  if (!match) return {};
-  const width = Number(match[1]);
-  const height = Number(match[2]);
-  if (!Number.isFinite(width) || !Number.isFinite(height)) return {};
+  if (!match) return { width: 1024, height: 1024 };
+  const width = Math.min(1440, Math.max(64, Number(match[1])));
+  const height = Math.min(1440, Math.max(64, Number(match[2])));
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return { width: 1024, height: 1024 };
   return { width, height };
 }
 
@@ -81,56 +84,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const finalPrompt = buildStableDiffusionPrompt(prompt, style);
+    const finalPrompt = buildPrompt(prompt, style);
     const resolutionSize = parseResolution(resolution);
 
-    const replicateRes = await fetch(REPLICATE_PREDICTIONS_URL, {
+    // Build input with z-image-turbo schema
+    const input: Record<string, unknown> = {
+      prompt: finalPrompt,
+      width: typeof width === "number" && Number.isFinite(width) ? Math.min(1440, Math.max(64, width)) : resolutionSize.width,
+      height: typeof height === "number" && Number.isFinite(height) ? Math.min(1440, Math.max(64, height)) : resolutionSize.height,
+      output_format: output_format || "jpg",
+      output_quality: typeof output_quality === "number" ? Math.min(100, Math.max(0, output_quality)) : 80,
+      num_inference_steps: typeof num_inference_steps === "number" ? Math.min(50, Math.max(1, num_inference_steps)) : 8,
+      guidance_scale: typeof guidance_scale === "number" ? Math.min(20, Math.max(0, guidance_scale)) : 0,
+    };
+
+    if (typeof seed === "number" && Number.isFinite(seed)) {
+      input.seed = seed;
+    }
+
+    const replicateRes = await fetch(REPLICATE_API_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiToken}`,
         "Content-Type": "application/json",
-        Prefer: "wait",
+        "Prefer": "wait",
       },
-      body: JSON.stringify({
-        version: STABLE_DIFFUSION_VERSION,
-        input: {
-          prompt: finalPrompt,
-          output_format: output_format || "jpg",
-          output_quality: output_quality || 80,
-          ...(resolutionSize.width && resolutionSize.height
-            ? { width: resolutionSize.width, height: resolutionSize.height }
-            : {}),
-          ...(typeof seed === "number" && Number.isFinite(seed)
-            ? { seed }
-            : {}),
-          ...(typeof width === "number" && Number.isFinite(width)
-            ? { width }
-            : {}),
-          ...(typeof height === "number" && Number.isFinite(height)
-            ? { height }
-            : {}),
-          ...(typeof guidance_scale === "number" &&
-            Number.isFinite(guidance_scale)
-            ? { guidance_scale }
-            : {}),
-          ...(typeof num_inference_steps === "number" &&
-            Number.isFinite(num_inference_steps)
-            ? { num_inference_steps }
-            : {}),
-        },
-      }),
+      body: JSON.stringify({ input }),
     });
 
     const data = (await replicateRes.json()) as ReplicatePrediction;
 
     if (!replicateRes.ok) {
       console.error(
-        "Replicate Stable Diffusion error:",
+        "Replicate z-image-turbo error:",
         replicateRes.status,
         JSON.stringify(data, null, 2),
       );
       return NextResponse.json(
-        { error: "Failed to generate image" },
+        { error: data.error || "Failed to generate image" },
         { status: 500 },
       );
     }
