@@ -150,12 +150,16 @@ export async function POST(req: NextRequest) {
     const baseUrl = getBaseUrl(req);
     const createdAt = new Date().toISOString();
 
-    // Try to apply watermark, fallback to original URL if it fails
+    // Try to apply watermark, fallback to original URL if it fails or sharp is unavailable
     let finalUrl = imageUrl;
     try {
       const watermarkedBuffer = await applyImageWatermarkFromUrl(imageUrl);
-      await saveWatermarkedImage(id, watermarkedBuffer, imageUrl);
-      finalUrl = `${baseUrl}/api/media/${id}`;
+      if (watermarkedBuffer) {
+        await saveWatermarkedImage(id, watermarkedBuffer, imageUrl);
+        finalUrl = `${baseUrl}/api/media/${id}`;
+      } else {
+        console.log("Watermark skipped (sharp unavailable), using original URL");
+      }
     } catch (watermarkError) {
       console.error("Watermark failed, using original URL:", watermarkError);
       // Continue with original URL
