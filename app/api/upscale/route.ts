@@ -109,17 +109,26 @@ export async function POST(req: NextRequest) {
     }
 
     const id = randomUUID();
-    const buffer = await applyImageWatermarkFromUrl(imageUrl);
-    await saveWatermarkedImage(id, buffer, imageUrl);
     const baseUrl = getBaseUrl(req);
-    const watermarkedUrl = `${baseUrl}/api/media/${id}`;
     const createdAt = new Date().toISOString();
+
+    // Try to apply watermark, fallback to original URL if sharp is unavailable
+    let finalUrl = imageUrl;
+    try {
+      const buffer = await applyImageWatermarkFromUrl(imageUrl);
+      if (buffer) {
+        await saveWatermarkedImage(id, buffer, imageUrl);
+        finalUrl = `${baseUrl}/api/media/${id}`;
+      }
+    } catch (watermarkError) {
+      console.error("Watermark failed, using original URL:", watermarkError);
+    }
 
     return NextResponse.json({
       id,
       createdAt,
       originalUrl: imageUrl,
-      watermarkedUrl,
+      watermarkedUrl: finalUrl,
     });
   } catch (error) {
     console.error("Upscale route error:", error);
