@@ -147,12 +147,19 @@ export async function POST(req: NextRequest) {
     }
 
     const id = randomUUID();
-    const watermarkedBuffer = await applyImageWatermarkFromUrl(imageUrl);
-    await saveWatermarkedImage(id, watermarkedBuffer, imageUrl);
-
     const baseUrl = getBaseUrl(req);
-    const watermarkedUrl = `${baseUrl}/api/media/${id}`;
     const createdAt = new Date().toISOString();
+
+    // Try to apply watermark, fallback to original URL if it fails
+    let finalUrl = imageUrl;
+    try {
+      const watermarkedBuffer = await applyImageWatermarkFromUrl(imageUrl);
+      await saveWatermarkedImage(id, watermarkedBuffer, imageUrl);
+      finalUrl = `${baseUrl}/api/media/${id}`;
+    } catch (watermarkError) {
+      console.error("Watermark failed, using original URL:", watermarkError);
+      // Continue with original URL
+    }
 
     return NextResponse.json(
       {
@@ -160,14 +167,15 @@ export async function POST(req: NextRequest) {
         prompt,
         createdAt,
         originalUrl: imageUrl,
-        watermarkedUrl,
+        watermarkedUrl: finalUrl,
       },
       { status: 200 },
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Replicate image route error:", error);
     return NextResponse.json(
-      { error: "Failed to generate image" },
+      { error: `Failed to generate image: ${errorMessage}` },
       { status: 500 },
     );
   }
