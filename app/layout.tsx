@@ -70,6 +70,11 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
         />
+        <Script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="190754"
+          strategy="afterInteractive"
+        />
         {/* Monetag scripts - commented out
         <Script
           id="monetag-1"

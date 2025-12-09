@@ -176,11 +176,15 @@ export default function ImageStudioPage() {
     a.click();
   };
 
-  const handleUnlockWatermark = async () => {
+  const handleUnlockWatermark = () => {
     if (!currentImage || currentImage.hasUnlockedClean) return;
+
+    // Open monetization URL in new tab
+    window.open('https://otieu.com/4/10298589', '_blank');
+
+    // Unlock the watermark after redirect
     setUnlockingImageId(currentImage.id);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    setTimeout(() => {
       setHistory((prev) =>
         prev.map((image) =>
           image.id === currentImage.id
@@ -192,9 +196,9 @@ export default function ImageStudioPage() {
             : image,
         ),
       );
-    } finally {
       setUnlockingImageId(null);
-    }
+      toast.success('Watermark removed!');
+    }, 1500);
   };
 
   return (
