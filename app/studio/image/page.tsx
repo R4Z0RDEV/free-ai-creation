@@ -433,7 +433,7 @@ export default function ImageStudioPage() {
                 )}
 
                 {currentImage && !isGenerating && (
-                  <WatermarkedPreview hasWatermark={false}>
+                  <WatermarkedPreview hasWatermark={true}>
                     <img
                       src={displayedCurrentUrl}
                       alt="Generated"
