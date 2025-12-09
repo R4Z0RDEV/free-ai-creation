@@ -70,6 +70,7 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-3621018373095111"
         />
+        {/* Monetag scripts - commented out
         <Script
           id="monetag-1"
           strategy="beforeInteractive"
@@ -89,6 +90,7 @@ export default function RootLayout({
             __html: `(function(s){s.dataset.zone='10284817',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
           }}
         />
+        */}
       </head>
       <body className={cn(
         bricolage.className,
